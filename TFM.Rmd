@@ -1,0 +1,2823 @@
+---
+title: "TFM"
+author: "Karolina Gliwa"
+date: "2024-02-19"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE )
+```
+
+```{r data,eval=FALSE}
+
+#NASA
+######################### OCEAN WARMING ######################
+
+url <- "https://www.ncei.noaa.gov/data/oceans/woa/DATA_ANALYSIS/3M_HEAT_CONTENT/DATA/basin/pentad/pent_h22-w0-2000m.dat"
+ocean_warming <- read.table(url, header = TRUE, sep = "", fill = TRUE, check.names = TRUE)
+
+str(data)
+########################## CARBON #########################
+urll="https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt"
+carbon <- read.table(urll, header = TRUE, sep = "", fill = TRUE, check.names = TRUE)
+
+str(carbon)
+
+colnames(carbon) <- c("Year", "Month", "decimal_date", "monthly_average", "de_seasonalized", "days", "st_dev", "unc_of_mon_mean")
+
+##################### TEMPERATURES ####################
+urlll="https://data.giss.nasa.gov/gistemp/graphs/graph_data/Global_Mean_Estimates_based_on_Land_and_Ocean_Data/graph.txt"
+temperatures <- read.table(urlll, header = TRUE, sep = "", fill = TRUE, check.names = TRUE)
+
+str(temperatures)
+
+temperatures$X.C.=NULL
+# Elimina las tres primeras filas
+temperatures <- temperatures[-c(1:3), ]
+
+# Renombra las columnas según la segunda imagen proporcionada
+colnames(temperatures) <- c("Year", "No_Smoothing", "Lowess_5")
+str(temperatures)
+
+temperatures$Year=as.numeric(temperatures$Year)
+temperatures$No_Smoothing=as.numeric(temperatures$No_Smoothing)
+temperatures$Lowess_5=as.numeric(temperatures$Lowess_5)
+
+################# SEA LEVEL ##################################
+
+urlllll="https://deotb6e7tfubr.cloudfront.net/s3-edaf5da92e0ce48fb61175c28b67e95d/podaac-ops-cumulus-protected.s3.us-west-2.amazonaws.com/MERGED_TP_J1_OSTM_OST_GMSL_ASCII_V51/GMSL_TPJAOS_5.1.txt?A-userid=karolinagliwa&Expires=1711726958&Signature=E~ZJ68OfPZV6Oo32VolCtXWfg-2T1m-y4uUMqwxAwVes-B8RHi2ECI1~FXmF8S5uaWS7wYLC8It7p44OFHBOr~Fof74PRxHS~9HY9bGYLdjjZT14LT-UeSzxfWX6HL0pm3A6mX4fg0N3Zb4cDlRDnwZP5emqWnhERF8gZk8mGvglUVXgN8-yVpN4iPxjUG8hBkzdCruBJaZxmfO3ztCcHaLgH3n7tj0foW4uPXkc0CnyYybq64dwzCQH3NicpWFy5yiQv5O3hsBPS8KocQb4t8lVWc3d6rV4ZjR5NSn9LYY1kMJgcm8Txg3gd~KrNFUGafHk~s2OJq5ZXL5msP-yVg__&Key-Pair-Id=KZRIRLMTAHKYV"
+header_lines <- 52
+
+# Read the data, skipping the header rows
+sea_level <- read.table(urlllll, skip = header_lines, header = FALSE,fill = TRUE, sep = "")
+
+# Manually assign column names based on your description
+colnames(sea_level) <- c("Altimeter_Type", "Merged_File_Cycle_Number", "Year_Fraction",
+                         "Number_of_Observations", "Number_of_Weighted_Observations",
+                         "GMSL_No_GIA_Variation", "GMSL_No_GIA_SD",
+                         "Smoothed_GMSL_No_GIA", "GMSL_GIA_Variation",
+                         "GMSL_GIA_SD", "Smoothed_GMSL_GIA",
+                         "Smoothed_GMSL_GIA_Annual_Semiannual_Removed",
+                         "Smoothed_GMSL_No_GIA_Annual_Semiannual_Removed")
+
+# View the first few rows of the data to confirm it's read correctly
+#head(gmsl_data)
+
+######################## METHANE ###########################
+urllll="https://gml.noaa.gov/webdata/ccgg/trends/ch4/ch4_annmean_gl.txt"
+methane <- read.table(urllll, header = TRUE, sep = "", fill = TRUE, check.names = TRUE)
+str(methane)
+colnames(methane)=c("year","mean","unc")
+
+######################### ARCTIC SEA #########################
+Arctic_sea_ice=c(6.14,6.47,7.47,6.4,7.14,6.08,7.58,6.69,6.54,6.12,6.25,6.73,5.83,6.12,5.98,5.5,5.86,4.27,4.69,5.26,4.87,4.56,3.57,5.21,5.22,4.62,4.53,4.82,4.79,4.36,4,4.95,4.9)
+
+
+# WORLD_BANK
+
+refugees=readxl::read_excel("refugees.xlsx")
+str(refugees)
+refugees$year <- gsub("\\s*\\[.*?\\]\\s*", "", refugees$year)
+refugees$year <- trimws(refugees$year)
+str(refugees)
+refugees$year=as.numeric(refugees$year)
+refugees$`Refugee population`=as.numeric(refugees$`Refugee population`)
+colnames(refugees)=c("year","refugees")
+
+
+
+#disasters=read.csv("disasters.csv")
+
+
+# IMF DISASTERS (count world):
+
+Drought=c(19,12,11,9,11,6,7,17,20,26,25,22,24,14,11,20,9,11,16,18,21,16,18,9,20,27,14,12,17,15,12,16,22)
+
+#Extreme_temperature=c(13,8,7,3,9,13,5,13,12,8,30,23,15,25,16,40,14,25,16,20,28,15,52,13,17,12,12,10,27,21,5,3,12)
+
+Flood=c(59,75,57,84,88,93,91,95,94,122,157,155,171,157,127,191,226,217,165,151,184,156,136,148,136,161,159,127,127,195,201,222,176)
+
+Landslide=c(5,9,8,25,11,16,24,13,22,18,27,24,20,21,15,13,20,10,12,29,32,17,13,11,15,20,13,25,12,25,19,12,17)
+
+Storm=c(132,66,76,105,80,76,74,79,86,103,101,105,122,85,121,130,76,100,112,87,94,81,90,105,98,121,86,126,94,91,127,119,105)
+
+Wildfire=c(4,8,8,2,13,7,4,15,18,21,30,14,22,14,8,13,9,18,5,9,7,8,6,10,4,13,10,15,10,14,9,19,15)
+
+
+```
+
+# 1.INTRODUCTION
+
+## 1.1 VARIABLES
+
+-   World Bank Variables (UNHCR):
+    -   **Refugees**: Forcibly displaced people worldwide
+    -   **Remittances**: The money or goods that migrants send back to families and friends in origin countries
+-   NASA Variables:
+    -   **Carbon**: Monthly mean CO2 constructed from daily mean values.(CO2 parts per million/ppm)
+    -   **Methane**: Mean per year of CH4 parts per billion/ ppb
+    -   **Temperature**: Annual average Temperature Anomaly (C), change in global surface temperature compared to the long-term average from 1951 to 1980.
+    -   **Ocean Warming**: Ocean warming measurement in Zettajoules, yearly data of world ocean warming with reference in 1955.
+    -   **Sea Level**: Sea Height Variation (mm) from 1993
+    -   **Arctic Sea Ice**: Arctic Sea Ice Minimum Extent in Million Square km
+-   IMF Variables:
+    -   **Climate-related Disasters Frequency (Count WorldWide)**:
+        -   Drought
+        -   Flood
+        -   Landslide
+        -   Storm
+        -   Wildfire
+
+```{r cleaning, eval=FALSE}
+
+# REFUGEES
+refugees=na.omit(refugees)
+data=data.frame(refugees)
+
+# CARBON
+carbon=carbon[,c(1,2,4)]
+carbon$Date <- as.Date(paste(carbon$Year, carbon$Month, "01", sep="-"))
+carbon=carbon[carbon$Year >= 1990 & carbon$Year <=2022, ]
+carbon = aggregate(monthly_average ~ Year, data = carbon, FUN = mean)
+data$carbon=carbon$monthly_average
+
+# METHANE
+methane=methane[methane$year >= 1990, c(1,2) ]
+data$methane=methane$mean
+
+# TEMPERATURE
+str(temperatures)
+temperatures=temperatures[temperatures$Year >= 1990 & temperatures$Year <= 2022, ]
+str(temperatures)
+data$temperatures=temperatures$No_Smoothing
+
+# OCEAN WARMING
+ocean_warming=ocean_warming[ocean_warming$YEAR >= 1990.5, c(1,2)]
+# this variable is until 2021 so we will need to predict the last year
+str(ocean_warming)
+new_row=data.frame(YEAR = 2022.5, WO = NA)
+ocean_warming=rbind(ocean_warming, new_row)
+data$ocean_warming=ocean_warming$WO
+
+
+
+# SEA LEVEL
+sea_level=sea_level[sea_level$Year_Fraction >= 1990 & sea_level$Year_Fraction < 2023, c(3,9)]
+# this variable is until 2021 so we will need to predict the last year
+str(sea_level)
+# Convert 'Year_Fraction' to integer to extract the year part
+#sea=floor(sea_level$Year_Fraction)
+# Count the number of rows for each year
+#year_counts= table(sea)
+#print(year_counts)
+# in most years we have 37 data points, in some 36, we do the mean of them to get the data yearly:
+library(dplyr)
+
+df=sea_level %>%
+  mutate(Year = floor(Year_Fraction))
+
+# Then group by the new Year column and summarize by taking the mean
+yearly_means_sea <- df %>%
+  group_by(Year) %>%
+  summarize(Mean_GMSL_GIA_Variation = mean(GMSL_GIA_Variation))
+
+# three years missing at the beginning so lets put NA:
+new_row_sea=data.frame(Year = c(1990,1991,1992), Mean_GMSL_GIA_Variation = NA)
+sea_level=rbind(yearly_means_sea, new_row_sea)
+n=nrow(sea_level)
+sea_level=sea_level[c((n-2):n, 1:(n-3)), ]
+data$sea_level=sea_level$Mean_GMSL_GIA_Variation
+
+
+# Arctic Sea Ice:
+data$arctic_ice=Arctic_sea_ice
+
+
+# DISASTERS:
+
+data$Drought=Drought
+#data$Extreme_Temperatures=Extreme_temperature
+data$Flood=Flood
+data$Landslide=Landslide
+data$storm=Storm
+data$wildfire=Wildfire
+
+
+
+data$remittence=c(0.39656088,0.331430354,0.339577476,0.333704435,0.342751418,	0.315735097,0.318308727,0.364217975,0.361037066,0.363641584,0.371527886,0.40481814,	0.451069703,0.494541305,0.503232142,0.540250707,0.577167169,0.612575519,0.64748971,	0.654435339,0.641989972,0.649475952,0.666534956,0.688768824,0.71613182,0.749652787,	0.723788794,0.740057663,0.748774023,0.767368793,0.788959546,0.779994364,0.796443702)
+
+
+write.csv(data, file.path(getwd(), "data.csv"))
+
+```
+
+```{r ts}
+
+data <- read.csv("data.csv")
+data=data[,-1]
+
+#ts_refugees <- ts(data$refugees, start=c(min(data$year)), frequency=1)
+ts_carbon <- ts(data$carbon, start=c(min(data$year)), frequency=1)
+ts_methane <- ts(data$methane, start=c(min(data$year)), frequency=1)
+ts_temperatures <- ts(data$temperatures, start=c(min(data$year)), frequency=1)
+ts_ocean_warming <- ts(data$ocean_warming, start=c(min(data$year)), frequency=1)
+ts_sea_level <- ts(data$sea_level, start=c(min(data$year)), frequency=1)
+ts_drought <- ts(data$Drought, start=c(min(data$year)), frequency=1)
+#ts_extreme_temperatures <- ts(data$Extreme_Temperatures, start=c(min(data$year)), frequency=1)
+ts_flood <- ts(data$Flood, start=c(min(data$year)), frequency=1)
+ts_landslide <- ts(data$Landslide, start=c(min(data$year)), frequency=1)
+ts_storm <- ts(data$storm, start=c(min(data$year)), frequency=1)
+ts_wildfire <- ts(data$wildfire, start=c(min(data$year)), frequency=1)
+ts_arctic_ice <- ts(data$arctic_ice, start=c(min(data$year)), frequency=1)
+ts_remittence <- ts(data$remittence, start=c(min(data$year)), frequency=1)
+
+
+ts_list <- list(
+  #refugees = ts_refugees,
+  carbon = ts_carbon,
+  methane = ts_methane,
+  temperatures = ts_temperatures,
+  ocean_warming = ts_ocean_warming,
+  sea_level = ts_sea_level,
+  drought = ts_drought,
+  #extreme_temperatures = ts_extreme_temperatures,
+  flood = ts_flood,
+  landslide = ts_landslide,
+  storm = ts_storm,
+  wildfire = ts_wildfire,
+  arctic_ice = ts_arctic_ice,
+  remittence=ts_remittence
+)
+
+library(reticulate)
+
+```
+
+## 1.2 PLOTS
+
+```{r}
+
+library(reticulate)
+use_python("C:/Users/invitado.pc/anaconda3/python.exe", required = TRUE)
+
+```
+
+```{python}
+
+import pandas as pd
+import statsmodels.api as sm
+
+data = pd.read_csv("data.csv")
+# Remove the first column from the DataFrame
+data = data.iloc[:, 1:]
+
+# Function to create a time series in Python
+def create_time_series(column, start_year):
+    return pd.Series(data[column].values, index=pd.date_range(start=f"{start_year}", periods=len(data), freq='A'))
+
+# Determine the sprint(data.info())
+start_year = data['year'].min()
+
+# Creating time series for each metric
+#ts_refugees = create_time_series('refugees', start_year)
+ts_carbon = create_time_series('carbon', start_year)
+ts_methane = create_time_series('methane', start_year)
+ts_temperatures = create_time_series('temperatures', start_year)
+ts_ocean_warming = create_time_series('ocean_warming', start_year)
+ts_sea_level = create_time_series('sea_level', start_year)
+ts_drought = create_time_series('Drought', start_year)
+# ts_extreme_temperatures = create_time_series('Extreme_Temperatures', start_year)  # Uncomment if needed
+ts_flood = create_time_series('Flood', start_year)
+ts_landslide = create_time_series('Landslide', start_year)
+ts_storm = create_time_series('storm', start_year)
+ts_wildfire = create_time_series('wildfire', start_year)
+ts_arctic_ice = create_time_series('arctic_ice', start_year)
+ts_remittences= create_time_series('remittence', start_year)
+
+
+ts_list = {
+    #'refugees': ts_refugees,
+    'carbon': ts_carbon,
+    'methane': ts_methane,
+    'temperatures': ts_temperatures,
+    'ocean_warming': ts_ocean_warming,
+    'sea_level': ts_sea_level,
+    'drought': ts_drought,
+    # 'extreme_temperatures': ts_extreme_temperatures,  # Uncomment if needed
+    'flood': ts_flood,
+    'landslide': ts_landslide,
+    'storm': ts_storm,
+    'wildfire': ts_wildfire,
+    'arctic_ice': ts_arctic_ice,
+    'remittances':ts_remittences
+}
+```
+
+```{python}
+import matplotlib.pyplot as plt
+n = len(ts_list)  # Number of time series
+cols = 3  # Number of columns in the subplot grid
+rows = n // cols + (n % cols > 0)  # Calculate rows needed, rounding up
+
+# Create a large figure to hold all subplots
+plt.figure(figsize=(15, rows * 3))
+
+# Loop through the dictionary and create a subplot for each time series
+for i, (name, ts) in enumerate(ts_list.items(), start=1):
+    plt.subplot(rows, cols, i)  # Create subplot
+    ts.plot(title=name.capitalize())  # Plot time series
+    plt.xlabel('Time')
+    plt.ylabel(name.capitalize())
+
+plt.tight_layout() # Adjust layout to prevent overlap
+
+plt.savefig('time_series_grid.png')
+
+plt.show() 
+
+```
+
+## 1.3 CHECK NAs:
+
+```{r nas}
+variables_with_na <- c() 
+for(i in names(ts_list)) {
+  if(any(is.na(ts_list[[i]]))) {  
+    variables_with_na <- c(variables_with_na, i)  
+  }
+}
+
+variables_with_na
+ 
+```
+
+### 1.3.1 Impute NAs
+
+Package `imputeTS` for imputing NAs in time series:
+
+The imputation method chosed is Kalman with Auto.Arima
+
+The Kalman filter,it's a mathematical method that keeps updating and improving its estimates or predictions of what's happening in a process over time, even when some of the incoming information is incomplete or has some errors. It's constantly taking in new measurements, comparing them with its predictions, and then tweaking those predictions to be more accurate. Now, when it's paired with auto.arima, which picks the best ARIMA model we can put them to work together.
+
+Auto.arima automatically finds patterns in the data---like trends and seasonal swings---and selects the best formula to describe these patterns. Then the Kalman filter uses this formula to make its "guesses" for the missing points.
+
+```{r impnas, fig.align='center', warning=FALSE, message=FALSE}
+
+library(gridExtra)
+library(ggplot2)
+library(ggtext)
+library(stinepack)
+library(imputeTS)
+
+#plot_ocean_warming_before=ggplot_na_distribution(ts_ocean_warming)
+plot_sea_level_before=ggplot_na_distribution(ts_sea_level,title = "Distribution of Missing Values Before Imputation")
+#plot_remittance_before=ggplot_na_distribution(ts_remittence)
+
+
+#ts_ocean_warming_imputed=na_kalman(ts_ocean_warming,model="auto.arima") 
+ts_sea_level_imputed= na_kalman(ts_sea_level, model="auto.arima")
+#ts_remittance_imputed= na_kalman(ts_remittence, model="auto.arima")
+
+library(zoo)
+
+ts_ocean_warming_imputed <- na.locf(ts_list$ocean_warming)
+#ts_sea_level_imputed <- na.locf(ts_list$sea_level)
+#ts_remittance_imputed <- na.locf(ts_list$remittence)
+
+
+#plot_ocean_warming_after=ggplot_na_distribution(ts_ocean_warming_imputed)
+plot_sea_level_after=ggplot_na_distribution(ts_sea_level_imputed,title = "Distribution of Missing Values After Imputation")
+#plot_remitance_after=ggplot_na_distribution(ts_remittance_imputed)
+
+
+#grid.arrange(plot_ocean_warming_before, plot_ocean_warming_after, ncol = 2, top="OCEAN WARMING")
+grid_plot=grid.arrange(plot_sea_level_before, plot_sea_level_after, ncol = 2)
+#grid.arrange(plot_remittance_before, plot_remitance_after, ncol = 2, top="REMITTENCE %")
+
+ggsave("sea_level_grid.png", grid_plot, width = 10, height = 5,units = "in")
+
+#ts_ocean_warming=ts_ocean_warming_imputed
+ts_sea_level=ts_sea_level_imputed
+#ts_remittence=ts_remittance_imputed
+
+
+
+ts_list <- list(
+ # refugees = ts_refugees,
+  carbon = ts_carbon,
+  methane = ts_methane,
+  temperatures = ts_temperatures,
+  ocean_warming = ts_ocean_warming,
+  sea_level = ts_sea_level,
+  drought = ts_drought,
+  flood = ts_flood,
+  landslide = ts_landslide,
+  storm = ts_storm,
+  wildfire = ts_wildfire,
+  arctic_ice = ts_arctic_ice,
+  remittence=ts_remittence
+)
+
+
+
+```
+
+```{r}
+variables_with_na <- c() 
+for(i in names(ts_list)) {
+  if(any(is.na(ts_list[[i]]))) {  
+    variables_with_na <- c(variables_with_na, i)  
+  }
+}
+
+variables_with_na
+```
+
+```{r}
+ts_sea_level <- ts_list$sea_level
+
+# Convert the R time series to a Python object
+ts_sea_level_py <- r_to_py(ts_sea_level)
+```
+
+```{python}
+
+ts_sea_level_py = r.ts_sea_level_py
+
+ts_sea_level_series = pd.Series(ts_sea_level_py, index=pd.date_range(start='1990', periods=len(ts_sea_level_py), freq='A-DEC'))
+
+ts_list = {
+    #'refugees': ts_refugees,
+    'carbon': ts_carbon,
+    'methane': ts_methane,
+    'temperatures': ts_temperatures,
+    'ocean_warming': ts_ocean_warming,
+    'sea_level': ts_sea_level_series,
+    'drought': ts_drought,
+    # 'extreme_temperatures': ts_extreme_temperatures,  
+    'flood': ts_flood,
+    'landslide': ts_landslide,
+    'storm': ts_storm,
+    'wildfire': ts_wildfire,
+    'arctic_ice': ts_arctic_ice,
+    'remittence':ts_remittences
+}
+
+```
+
+As ocean warming has the last value as NA, we will eliminate it, so we will eliminate the last value of all time series
+
+```{r}
+ts_list=lapply(ts_list, function(ts) ts[-length(ts)])
+
+ts_list=lapply(ts_list, function(ts) {
+  ts(ts, frequency = 1, start = c(min(data$year)))})
+
+```
+
+```{python}
+
+ts_list = {key: value[:-1] for key, value in ts_list.items()}
+
+```
+
+```{r}
+variables_with_na <- c() 
+for(i in names(ts_list)) {
+  if(any(is.na(ts_list[[i]]))) {  
+    variables_with_na <- c(variables_with_na, i)  
+  }
+}
+
+variables_with_na
+```
+
+## 1.4 CORRELATIONS:
+
+```{r corr, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(forecast)
+library(gridExtra)
+library(tibble)
+library(zoo)
+library(tseries)
+library(xtable)
+
+
+ts_matrix <- do.call(cbind, lapply(ts_list, as.numeric))
+cor_matrix <- cor(ts_matrix)
+print(cor_matrix)
+cor_matrix_1 <- cor_matrix[, 1:6]  # First 6 columns
+cor_matrix_2 <- cor_matrix[, 7:12]  # Next 6 columns
+
+# Convert each segment to a LaTeX table
+cor_matrix_latex_1 <- xtable(cor_matrix_1, caption = "Correlation Matrix of Time Series (Part 1)")
+cor_matrix_latex_2 <- xtable(cor_matrix_2, caption = "Correlation Matrix of Time Series (Part 2)")
+
+# Save the LaTeX tables to .tex files
+print(cor_matrix_latex_1, file = "correlation_matrix_1.tex")
+print(cor_matrix_latex_2, file = "correlation_matrix_2.tex")
+```
+
+### 1.4.1 Multicollinearity:
+
+```{r, warning=FALSE, message=FALSE}
+library(car)
+
+df <- data.frame(ts_list)
+
+# Preliminary check for multicollinearity
+# Fit a linear model with all variables as predictors
+lm_model <- lm(remittence ~ ., data = df) 
+vif_results <- vif(lm_model)
+print(vif_results)
+
+
+vif_df <- as.data.frame(vif_results)
+vif_df$Variable <- rownames(vif_df)
+rownames(vif_df) <- NULL
+
+# Convert the VIF results to a LaTeX table
+vif_latex <- xtable(vif_df, caption = "Variance Inflation Factor (VIF) Results")
+
+# Save the LaTeX table to a .tex file
+print(vif_latex, file = "vif_results.tex", include.rownames = FALSE)
+```
+
+### 1.4.2 Selection of Variables
+
+We will eliminate one by one starting from the highest one.
+
+```{r}
+
+print("Carbon eliminated")
+# carbon eliminated:
+df_modified_vif_before=df[, !(colnames(df) %in% "carbon")]
+
+lm_model <- lm(remittence ~ ., data = df_modified_vif_before) 
+vif_results <- vif(lm_model)
+print(vif_results)
+
+print("------------------------------") # Separator
+
+
+# sea_level eliminated:
+print("Sea Level eliminated")
+df_modified_vif_before=df_modified_vif_before[, !(colnames(df_modified_vif_before) %in% "sea_level")]
+lm_model <- lm(remittence ~ ., data = df_modified_vif_before) 
+vif_results <- vif(lm_model)
+print(vif_results)
+
+print("------------------------------") # Separator
+
+# ocean_warming eliminated:
+print("Ocean Warming eliminated")
+df_modified_vif_before=df_modified_vif_before[, !(colnames(df_modified_vif_before) %in% "ocean_warming")]
+lm_model <- lm(remittence ~ ., data = df_modified_vif_before) 
+vif_results <- vif(lm_model)
+print(vif_results)
+
+```
+
+Now all predictor variables have VIFs below 10. Multicollinearity solved.
+
+# 2. ANALYSIS
+
+## 2.1 STATIONARITY
+
+We dont have seasonality as we have annual data, so we will check the trend:
+
+-   If a series has a deterministic trend (e.g., it consistently increases by a certain amount each period), it is non-stationary because the mean changes over time. However, this non-stationarity can often be removed by detrending the series (e.g., by subtracting the fitted trend line from the original series).
+
+-   If a series has a unit root, the non-stationarity cannot be removed simply by detrending because the underlying process has a stochastic trend. Instead, differencing the series (taking the change from one period to the next) is a common approach to achieve stationarity.
+
+Unit root tests such as the Augmented Dickey-Fuller (ADF) test or the Phillips-Perron (PP) test are designed to distinguish between a unit root non-stationarity and other types of non-stationarity or stationarity. They test the null hypothesis that a unit root is present against the alternative that the series is stationary or has a deterministic trend.
+
+The ADF test addresses whether a time series is non-stationary and possesses a unit root; its null hypothesis is that the series has a unit root (indicating non-stationarity), against the alternative hypothesis of stationarity. The test includes lagged difference terms in its regression to account for autocorrelation.
+
+The PP test, which also tests for a unit root, differs from the ADF by considering the serial correlation in the error terms through non-parametric statistical adjustments, thus allowing for a broader test for non-stationarity without specifying a model for the autocorrelation structure.
+
+### 2.1.1 Augmented Dickey-Fuller (ADF)
+
+```{python}
+import pandas as pd
+import numpy as np
+from arch.unitroot import *
+
+
+# Function to perform the ADF test and return the t-statistic and p-value
+def run_adf(ts, trend='c'):
+    adf_test = ADF(ts.dropna(), trend=trend)
+    return adf_test.stat, adf_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+# Assuming ts_list is a dictionary with time series data as its values
+# The keys of the dictionary are the names of the variables
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_adf(ts, trend='c')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(t_stat_level)
+    results_constant['p-value Level'].append(p_value_level)
+    results_constant['t-value First Difference'].append(t_stat_diff)
+    results_constant['p-value First Difference'].append(p_value_diff)
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_adf(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(t_stat_level)
+    results_trend['p-value Level'].append(p_value_level)
+    results_trend['t-value First Difference'].append(t_stat_diff)
+    results_trend['p-value First Difference'].append(p_value_diff)
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("ADF Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nADF Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+
+# Save DataFrames as LaTeX tables
+df_results_constant.to_latex('adf_test_constant.tex', index=False, caption='ADF Test with Constant Only')
+df_results_trend.to_latex('adf_test_trend.tex', index=False, caption='ADF Test with Constant and Trend')
+```
+
+```{python}
+
+import pandas as pd
+import numpy as np
+from arch.unitroot import ADF
+
+# Function to perform the ADF test and return the t-statistic and p-value
+def run_adf(ts, trend='c'):
+    adf_test = ADF(ts.dropna(), trend=trend)
+    return adf_test.stat, adf_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_adf(ts, trend='c')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(round(t_stat_level, 3))
+    results_constant['p-value Level'].append(round(p_value_level, 3))
+    results_constant['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_constant['p-value First Difference'].append(round(p_value_diff, 3))
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_adf(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(round(t_stat_level, 3))
+    results_trend['p-value Level'].append(round(p_value_level, 3))
+    results_trend['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_trend['p-value First Difference'].append(round(p_value_diff, 3))
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Save DataFrames as LaTeX tables using Styler
+df_results_constant.style.format(precision=3).to_latex('adf_test_constant.tex', caption='ADF Test with Constant Only', position_float='centering', index=False)
+df_results_trend.style.format(precision=3).to_latex('adf_test_trend.tex', caption='ADF Test with Constant and Trend', position_float='centering', index=False)
+
+# Printing the tables for verification
+print("ADF Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nADF Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+```
+
+
+### 2.1.2 Phillips-Perron (PP)
+
+```{python}
+
+
+# Function to perform the Phillips-Perron test and return the test statistic and p-value
+def run_pp(ts, trend='c'):
+    pp_test = PhillipsPerron(ts.dropna(), trend=trend)
+    return pp_test.stat, pp_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+# Assuming ts_list is a dictionary with time series data as its values
+# The keys of the dictionary are the names of the variables
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_pp(ts, trend='c')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(t_stat_level)
+    results_constant['p-value Level'].append(p_value_level)
+    results_constant['t-value First Difference'].append(t_stat_diff)
+    results_constant['p-value First Difference'].append(p_value_diff)
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_pp(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(t_stat_level)
+    results_trend['p-value Level'].append(p_value_level)
+    results_trend['t-value First Difference'].append(t_stat_diff)
+    results_trend['p-value First Difference'].append(p_value_diff)
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("Phillips-Perron Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nPhillips-Perron Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+
+```
+
+
+```{python}
+
+import pandas as pd
+import numpy as np
+from arch.unitroot import PhillipsPerron
+
+# Function to perform the Phillips-Perron test and return the test statistic and p-value
+def run_pp(ts, trend='c'):
+    pp_test = PhillipsPerron(ts.dropna(), trend=trend)
+    return pp_test.stat, pp_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_pp(ts, trend='c')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(round(t_stat_level, 3))
+    results_constant['p-value Level'].append(round(p_value_level, 3))
+    results_constant['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_constant['p-value First Difference'].append(round(p_value_diff, 3))
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_pp(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(round(t_stat_level, 3))
+    results_trend['p-value Level'].append(round(p_value_level, 3))
+    results_trend['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_trend['p-value First Difference'].append(round(p_value_diff, 3))
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("Phillips-Perron Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nPhillips-Perron Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+# Save DataFrames as LaTeX tables using Styler
+df_results_constant.style.format(precision=3).hide(axis='index').to_latex('pp_test_constant.tex', caption='Phillips-Perron Test with Constant Only', position_float='centering')
+df_results_trend.style.format(precision=3).hide(axis='index').to_latex('pp_test_trend.tex', caption='Phillips-Perron Test with Constant and Trend', position_float='centering')
+
+```
+
+
+
+### 2.1.3 Order of Integration
+
+```{python}
+
+# Creating a list of dictionaries with each containing a key and a differenced series
+ts_list_difff = {
+    'carbon': ts_list['carbon'].diff().dropna(),
+    'methane': ts_list['methane'].diff().diff().dropna(),
+    'temperatures': ts_list['temperatures'].diff().dropna(),
+    'ocean_warming': ts_list['ocean_warming'].diff().dropna(),
+    'sea_level': ts_list['sea_level'].diff().dropna(),
+    'drought': ts_list['drought'].diff().dropna(),  
+    'flood': ts_list['flood'].diff().dropna(),
+    'landslide': ts_list['landslide'].diff().dropna(),
+    'storm': ts_list['storm'],  
+    'wildfire': ts_list['wildfire'].diff().dropna(),
+    'arctic_ice': ts_list['arctic_ice'].diff().diff().dropna(),
+    'remittance': ts_list['remittence'].diff().dropna()}
+    
+    
+    
+```
+
+```{python}
+
+
+# Dictionary of variables and their respective order of integration
+order_of_integration = {
+    'carbon': 'I(1)',
+    'methane': 'I(2)',
+    'temperatures': 'I(1)',
+    'ocean_warming': 'I(1)',
+    'sea_level': 'I(1)',
+    'drought': 'I(1)',
+    'flood': 'I(1)',
+    'landslide': 'I(1)',
+    'storm': 'I(0)',  # Assuming 'storm' is stationary without differencing
+    'wildfire': 'I(1)',
+    'arctic_ice': 'I(2)',
+    'remittance': 'I(1)'
+}
+
+# Create a DataFrame from the dictionary
+integration_order_df = pd.DataFrame(list(order_of_integration.items()), columns=['Variable', 'Order of Integration'])
+
+# To hide the index when printing
+print(integration_order_df.to_string(index=False))
+
+integration_order_df.to_latex('integration_order_table.tex', index=False, caption='Order of Integration for Variables', label='tab:integration_order')
+
+
+
+```
+
+```{python}
+
+# Function to perform the ADF test and return the t-statistic and p-value
+def run_adf(ts, trend=''):
+    adf_test = ADF(ts.dropna(), trend=trend)
+    return adf_test.stat, adf_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list_difff.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_adf(ts, trend='c')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(t_stat_level)
+    results_constant['p-value Level'].append(p_value_level)
+    results_constant['t-value First Difference'].append(t_stat_diff)
+    results_constant['p-value First Difference'].append(p_value_diff)
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_adf(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(t_stat_level)
+    results_trend['p-value Level'].append(p_value_level)
+    results_trend['t-value First Difference'].append(t_stat_diff)
+    results_trend['p-value First Difference'].append(p_value_diff)
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("ADF Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nADF Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+
+```
+
+```{python}
+import pandas as pd
+from arch.unitroot import ADF
+
+# Function to perform the ADF test and return the t-statistic and p-value
+def run_adf(ts, trend=''):
+    adf_test = ADF(ts.dropna(), trend=trend)
+    return adf_test.stat, adf_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list_difff.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_adf(ts, trend='c')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(round(t_stat_level, 3))
+    results_constant['p-value Level'].append(round(p_value_level, 3))
+    results_constant['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_constant['p-value First Difference'].append(round(p_value_diff, 3))
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_adf(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_adf(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(round(t_stat_level, 3))
+    results_trend['p-value Level'].append(round(p_value_level, 3))
+    results_trend['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_trend['p-value First Difference'].append(round(p_value_diff, 3))
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("ADF Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nADF Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+# Save DataFrames as LaTeX tables using Styler
+df_results_constant.style.format(precision=3).hide(axis='index').to_latex('adf_test_constant_0.tex', caption='ADF Test with Constant Only', position_float='centering')
+df_results_trend.style.format(precision=3).hide(axis='index').to_latex('adf_test_trend_0.tex', caption='ADF Test with Constant and Trend', position_float='centering')
+
+```
+
+
+```{python}
+from arch.unitroot import PhillipsPerron
+
+# Function to perform the Phillips-Perron test and return the test statistic and p-value
+def run_pp(ts, trend='c'):
+    pp_test = PhillipsPerron(ts.dropna(), trend=trend)
+    return pp_test.stat, pp_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+# Assuming ts_list is a dictionary with time series data as its values
+# The keys of the dictionary are the names of the variables
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list_difff.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_pp(ts, trend='c')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(t_stat_level)
+    results_constant['p-value Level'].append(p_value_level)
+    results_constant['t-value First Difference'].append(t_stat_diff)
+    results_constant['p-value First Difference'].append(p_value_diff)
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_pp(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(t_stat_level)
+    results_trend['p-value Level'].append(p_value_level)
+    results_trend['t-value First Difference'].append(t_stat_diff)
+    results_trend['p-value First Difference'].append(p_value_diff)
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("Phillips-Perron Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nPhillips-Perron Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+```
+
+
+```{python}
+
+
+import pandas as pd
+from arch.unitroot import PhillipsPerron
+
+# Function to perform the Phillips-Perron test and return the test statistic and p-value
+def run_pp(ts, trend='c'):
+    pp_test = PhillipsPerron(ts.dropna(), trend=trend)
+    return pp_test.stat, pp_test.pvalue  # t-statistic, p-value
+
+# Function to determine the order of integration based on p-values
+def determine_order(p_value_level, p_value_diff):
+    if p_value_level < 0.05:
+        return 'I(0)'
+    elif p_value_diff < 0.05:
+        return 'I(1)'
+    else:
+        return 'I(>1)'
+
+
+# DataFrames to store results
+results_constant = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                    't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+results_trend = {'Variable': [], 't-value Level': [], 'p-value Level': [],
+                 't-value First Difference': [], 'p-value First Difference': [], 'Conclusion': []}
+
+# Run tests for constant and constant with trend
+for variable, ts in ts_list_difff.items():
+    # Ensure that the time series is a pandas Series and has no missing values
+    ts = pd.Series(ts).dropna()
+
+    # Skip the loop if the series is empty after dropping NaN values
+    if ts.empty:
+        continue
+
+    # Test with constant
+    t_stat_level, p_value_level = run_pp(ts, trend='c')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='c')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_constant['Variable'].append(variable)
+    results_constant['t-value Level'].append(round(t_stat_level, 3))
+    results_constant['p-value Level'].append(round(p_value_level, 3))
+    results_constant['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_constant['p-value First Difference'].append(round(p_value_diff, 3))
+    results_constant['Conclusion'].append(conclusion)
+    
+    # Test with constant and trend
+    t_stat_level, p_value_level = run_pp(ts, trend='ct')
+    t_stat_diff, p_value_diff = run_pp(ts.diff().dropna(), trend='ct')
+    conclusion = determine_order(p_value_level, p_value_diff)
+    results_trend['Variable'].append(variable)
+    results_trend['t-value Level'].append(round(t_stat_level, 3))
+    results_trend['p-value Level'].append(round(p_value_level, 3))
+    results_trend['t-value First Difference'].append(round(t_stat_diff, 3))
+    results_trend['p-value First Difference'].append(round(p_value_diff, 3))
+    results_trend['Conclusion'].append(conclusion)
+
+# Convert the results to Pandas DataFrames
+df_results_constant = pd.DataFrame(results_constant)
+df_results_trend = pd.DataFrame(results_trend)
+
+# Printing the tables
+print("Phillips-Perron Test with Constant Only:")
+print(df_results_constant.to_string(index=False))
+print("\nPhillips-Perron Test with Constant and Trend:")
+print(df_results_trend.to_string(index=False))
+
+# Save DataFrames as LaTeX tables using Styler
+df_results_constant.style.format(precision=3).hide(axis='index').to_latex('pp_test_constant_0.tex', caption='Phillips-Perron Test with Constant Only', position_float='centering')
+df_results_trend.style.format(precision=3).hide(axis='index').to_latex('pp_test_trend_0.tex', caption='Phillips-Perron Test with Constant and Trend', position_float='centering')
+
+
+```
+
+
+Now all our variables are stationary
+
+```{r}
+
+ts_list_difff=list(
+  #refugees = diff(ts_refugees, differences = 1),
+  carbon = diff(ts_list[["carbon"]], differences = 1),
+  methane = diff(ts_list[["methane"]], differences = 2),
+  temperatures = diff(ts_list[["temperatures"]],differences = 1),
+  ocean_warming = diff(ts_list[["ocean_warming"]],differences = 1),
+  sea_level = diff(ts_list[["sea_level"]],differences = 1),
+  drought = diff(ts_list[["drought"]],differences = 1),
+  flood = diff(ts_list[["flood"]],differences = 1),
+  landslide = diff(ts_list[["landslide"]],differences = 1),
+  storm = ts_list[["storm"]],
+  wildfire = diff(ts_list[["wildfire"]],differences = 1),
+  arctic_ice = diff(ts_list[["arctic_ice"]],differences = 2),
+  remittence=diff(ts_list[["remittence"]],differences = 1)
+)
+
+```
+
+## 2.2 CORRELATIONS
+
+```{r}
+
+ts_matrix <- do.call(cbind, lapply(ts_list_difff, as.numeric))
+cor_matrix <- cor(ts_matrix)
+print(cor_matrix)
+
+
+cor_matrix_1 <- cor_matrix[, 1:6]  # First 6 columns
+cor_matrix_2 <- cor_matrix[, 7:12]  # Next 6 columns
+
+# Convert each segment to a LaTeX table
+cor_matrix_latex_1 <- xtable(cor_matrix_1, caption = "Correlation Matrix of Time Series (Part 1)")
+cor_matrix_latex_2 <- xtable(cor_matrix_2, caption = "Correlation Matrix of Time Series (Part 2)")
+
+# Save the LaTeX tables to .tex files
+print(cor_matrix_latex_1, file = "correlation_matrix_1_diff.tex")
+print(cor_matrix_latex_2, file = "correlation_matrix_2_diff.tex")
+
+```
+
+### 2.2.1 Multicollinearity
+
+As we have differenciated the time series, now they have different length, so we will truncate it to the lowest length to be able to perform VIF
+
+```{r}
+
+shortest_length <- min(sapply(ts_list_difff, length))
+
+# Now trim each series to have the same length
+ts_list_difff <- lapply(ts_list_difff, function(x) tail(x, shortest_length))
+
+# Combine the truncated time series into a data frame
+df <- data.frame(ts_list_difff)
+
+# Now you can run your VIF analysis
+# Fit a linear model with all variables as predictors
+lm_model <- lm(remittence ~ ., data = df) # Replace 'remittance' with the actual name of your dependent variable
+vif_results <- vif(lm_model)
+print(vif_results)
+
+
+
+vif_df <- as.data.frame(vif_results)
+vif_df$Variable <- rownames(vif_df)
+rownames(vif_df) <- NULL
+
+# Convert the VIF results to a LaTeX table
+vif_latex <- xtable(vif_df, caption = "Variance Inflation Factor (VIF) Results")
+
+# Save the LaTeX table to a .tex file
+print(vif_latex, file = "vif_results_diff.tex", include.rownames = FALSE)
+
+```
+
+
+## SPLIT
+
+```{r, eval=FALSE}
+
+# Calculate the split point for 80/20 split
+split_point <- round(length(ts_list_difff$carbon) * 0.85)
+
+# Initialize empty lists for train and test sets
+ts_list_train <- list()
+ts_list_test <- list()
+
+# Loop through each time series in the list and split them
+for (var_name in names(ts_list_difff)) {
+  ts_data <- ts_list_difff[[var_name]]
+  
+  # Be aware that ts_data must be a numeric vector for the following to work.
+  # If it's not, you need to convert it beforehand.
+  
+  # Split the data into training and testing sets
+  ts_list_train[[var_name]] <- ts_data[1:split_point]
+  ts_list_test[[var_name]]  <- ts_data[(split_point+1):length(ts_data)]
+}
+
+
+
+```
+
+
+
+```{python}
+
+# Find the shortest length among all series
+shortest_length = min(len(ts_data) for ts_data in ts_list_difff.values())
+
+# Trim each series to have the same shortest length
+ts_list_difff = {var_name: ts_data[-shortest_length:] for var_name, ts_data in ts_list_difff.items()}
+
+```
+
+
+```{python, eval=FALSE}
+# Calculate the split point for 85/15 split
+split_point = round(len(ts_list_difff['carbon']) * 0.85)
+
+# Initialize empty dictionaries for train and test sets
+ts_list_train = {}
+ts_list_test = {}
+
+# Loop through each time series in the dictionary and split them
+for var_name, ts_data in ts_list_difff.items():
+    # Split the data into training and testing sets
+    ts_list_train[var_name] = ts_data[:split_point]
+    ts_list_test[var_name] = ts_data[split_point:]
+
+# Now ts_list_train and ts_list_test contain the training and testing data respectively
+
+
+```
+
+
+
+Now that the series are stationary we dont have multicollinearity.
+
+## 2.2 VAR
+
+### 2.2.1 Lag Order Selection
+
+```{python}
+
+from statsmodels.tsa.api import VAR
+
+def select_var_lag_order(ts_list_difff):
+    df = pd.DataFrame(ts_list_difff).dropna()
+    model = VAR(df)
+    max_lags = 1
+    selected_orders = model.select_order(maxlags=max_lags)
+    print(selected_orders.summary())
+    
+    # Return the selected order
+    return selected_orders.selected_orders['aic']
+
+print("Lag order selection for model:")
+lag_order = select_var_lag_order(ts_list_difff)
+
+
+```
+
+The selected lag order is 1. We can not try with higher lags as with 2 or higher is too large for the number of observations and the number of equations. The largest model cannot be estimated.
+
+### 2.2.2. VAR Model
+
+
+#### Python
+
+```{python}
+
+
+model = VAR(pd.DataFrame(ts_list_difff).dropna())
+var_results = model.fit(lag_order,trend='c')
+
+print(var_results.summary())
+
+with open('var_model_summary.txt', 'w') as f:
+    f.write(var_results.summary().as_text())
+```
+
+#### 2.2.2.1 Stability of the model
+
+The model is stable and normal
+
+```{python}
+
+# 1. Serial Correlation of Residuals
+whiteness_test = var_results.test_whiteness()
+print("Whiteness Test (Portmanteau) for Autocorrelation:")
+print(whiteness_test.summary())
+
+# 2. Stability of the VAR Model
+# Check if the model is stable
+stability=var_results.is_stable()
+print("Stability Test:")
+print(stability)
+
+
+# 3. Residual Normality
+normality_test_results = var_results.test_normality()
+print(normality_test_results.summary())
+
+
+```
+```{python}
+companion_matrix = var_results.coefs
+
+# Flatten the companion matrix to obtain the eigenvalues
+eigvals = np.linalg.eigvals(companion_matrix.reshape(-1, companion_matrix.shape[-1]))
+
+# Check if all eigenvalues lie within the unit circle
+stability_check = np.all(np.abs(eigvals) < 1)
+
+# Print results
+print("Eigenvalues of the companion matrix:", eigvals)
+print("All eigenvalues inside unit circle:", stability_check)
+```
+
+```{python}
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the eigenvalues
+eigenvalues = np.array([
+    0.56431648+0.03742536j,  0.56431648-0.03742536j,
+    -0.04518828+0.77148376j, -0.04518828-0.77148376j,
+    -0.03554533+0.46501739j, -0.03554533-0.46501739j,
+     0.12009307+0.j,         -0.81710736+0.j,
+    -0.36496152+0.26851932j, -0.36496152-0.26851932j,
+    -0.64627534+0.j,         -0.39845033+0.j
+])
+
+# Plot the eigenvalues on the complex plane
+plt.figure(figsize=(8, 8))
+plt.axhline(0, color='black', lw=0.5)
+plt.axvline(0, color='black', lw=0.5)
+unit_circle = plt.Circle((0, 0), 1, color='r', fill=False, linestyle='--')
+plt.gca().add_artist(unit_circle)
+
+# Plotting the eigenvalues
+plt.scatter(eigenvalues.real, eigenvalues.imag, c='b', marker='o')
+plt.title('Eigenvalues of the Companion Matrix')
+plt.xlabel('Real Part')
+plt.ylabel('Imaginary Part')
+plt.grid(True)
+plt.xlim(-1.5, 1.5)
+plt.ylim(-1.5, 1.5)
+plt.gca().set_aspect('equal', adjustable='box')
+
+# Save the figure in the working directory
+plt.savefig("eigenvalues_companion_matrix.png")
+plt.show()
+
+
+```
+
+
+same result computing by hand:
+
+```{python}
+
+coefs = var_results.coefs
+
+# Number of endogenous variables (K) and lag order (p)
+K = coefs.shape[1]
+p = coefs.shape[0]
+
+# Construct the companion matrix
+companion_matrix = np.zeros((K * p, K * p))
+
+# Fill the top row blocks with the coefficient matrices
+for i in range(p):
+    companion_matrix[:K, i*K:(i+1)*K] = coefs[i]
+
+# Fill the sub-diagonal with identity matrices
+if p > 1:
+    companion_matrix[K:, :-K] = np.eye(K * (p - 1))
+
+# Compute the eigenvalues of the companion matrix
+eigvals = np.linalg.eigvals(companion_matrix)
+
+# Print results
+print("Eigenvalues of the companion matrix:", eigvals)
+
+# Check if all eigenvalues lie within the unit circle
+stability_check = np.all(np.abs(eigvals) < 1)
+print("All eigenvalues inside unit circle:", stability_check)
+
+```
+
+
+
+#### R
+
+
+```{r}
+
+library(vars)
+
+train_matrix <- do.call(cbind, ts_list_difff)
+var_results <- VARselect(na.omit(train_matrix), lag.max = 12, type = "const")
+optimal_lags <- var_results$selection["AIC(n)"]
+optimal_lags
+```
+
+no podemos implementar 2 porque peta
+
+```{r}
+library(vars)
+var_model <- VAR(na.omit(train_matrix), p = 1)
+
+# Mostrar el resumen del modelo
+summary(var_model)
+
+```
+
+
+
+#### Stability of the model
+
+```{r}
+library(vars)
+
+# Assuming you've already fitted a VAR model called var_model
+
+# Test for serial correlation
+autocorrelation_results <- serial.test(var_model)
+print(autocorrelation_results)
+
+# Stability test
+#var model shows its stable
+
+# Multivariate normality test
+normality_results <- normality.test(var_model)
+print(normality_results)
+
+```
+
+
+
+### 2.2.3 Granger Causality
+
+#### Python
+
+```{python,eval=FALSE}
+from statsmodels.tsa.stattools import grangercausalitytests
+
+#granger causality between each pair of variables
+print("Granger Causality Tests:")
+for variable in var_results.names:
+    for caused_by in var_results.names:
+        if variable != caused_by:
+            print(f"\nTesting causality from {caused_by} to {variable}:")
+            test_result = grangercausalitytests(var_results.model.data.orig_endog[[caused_by, variable]], maxlag=lag_order, verbose=True)
+
+
+
+#this test uses fitted VAR model for checking causality
+import statsmodels.api as sm
+
+granger_results = {}
+variables = var_results.model.endog_names  # This gets the variable names used in the VAR model
+
+for i in range(len(variables)):
+    for j in range(len(variables)):
+        if i != j:
+            test_result = var_results.test_causality(variables[i], variables[j], kind='f')
+            granger_results[(variables[i], variables[j])] = test_result.summary()
+
+# You can now print or examine 'granger_results' to see the Granger causality test outputs
+for key, value in granger_results.items():
+    print(f"Causality from {key[0]} to {key[1]}:\n{value}\n")
+
+
+```
+
+##### Granger pairwise
+
+```{python}
+
+from statsmodels.tsa.stattools import grangercausalitytests
+
+print("Granger Causality Tests:")
+for variable in var_results.names:
+    for caused_by in var_results.names:
+        if variable != caused_by:
+            print(f"\nTesting causality from {caused_by} to {variable}:")
+            # Perform the Granger causality test without verbose output
+            test_results = grangercausalitytests(var_results.model.data.orig_endog[[caused_by, variable]], maxlag=lag_order, verbose=False)
+            
+            # Iterate through results for each lag
+            for lag, result in test_results.items():
+                f_test_statistic, f_p_value, f_degrees_of_freedom, f_degrees_of_freedom_resid = result[0]['ssr_ftest']
+                
+                # Check if the p-value is less than 0.10 and print relevant details
+                if f_p_value < 0.10:
+                    print(f"Lag {lag}:")
+                    print(f"F-Statistic: {f_test_statistic:.4f}, p-value: {f_p_value:.4f}")
+                    print(f"Degrees of Freedom: {f_degrees_of_freedom}, Degrees of Freedom Residual: {f_degrees_of_freedom_resid}")
+
+
+
+```
+
+
+##### Granger using fitted VAR:
+
+
+```{python}
+
+import statsmodels.api as sm
+
+# Dictionary to store the Granger causality results
+granger_results = {}
+variables = var_results.model.endog_names  # Get the variable names from the VAR model
+
+# Loop through each pair of variables
+for i in range(len(variables)):
+    for j in range(len(variables)):
+        if i != j:
+            # Perform the Granger causality test
+            test_result = var_results.test_causality(variables[i], variables[j], kind='f')
+            # Extract the p-value from the test result summary
+            pvalue = test_result.pvalue
+            # Save the result if the p-value is less than 0.10
+            if pvalue < 0.10:
+                granger_results[(variables[i], variables[j])] = test_result.summary()
+
+# Print the results where the p-value was below 0.10
+for key, value in granger_results.items():
+    print(f"Causality from {key[0]} to {key[1]}:\n{value}\n")
+
+
+```
+
+```{python}
+
+import statsmodels.api as sm
+
+# Specify the variable of interest
+target_variable = 'remittance'
+
+# Dictionary to store the Granger causality results related to the target variable
+granger_results = {}
+variables = var_results.model.endog_names  # Get the variable names from the VAR model
+
+# Loop through each pair of variables to find causality related to the target variable
+for var in variables:
+    if var != target_variable:
+        # Test if 'var' Granger-causes 'remittance'
+        test_result_to_remittance = var_results.test_causality(target_variable, var, kind='f')
+        if test_result_to_remittance.pvalue < 0.10:
+            granger_results[(target_variable, var)] = test_result_to_remittance.summary()
+
+        # Test if 'remittance' Granger-causes 'var'
+        test_result_from_remittance = var_results.test_causality(var, target_variable, kind='f')
+        if test_result_from_remittance.pvalue < 0.10:
+            granger_results[(var, target_variable)] = test_result_from_remittance.summary()
+
+# Print the results related to the target variable where the p-value was below 0.10
+for key, value in granger_results.items():
+    print(f"Causality from {key[0]} to {key[1]}:\n{value}\n")
+
+
+```
+
+all results
+```{python, eval=FALSE}
+import statsmodels.api as sm
+
+# Dictionary to store the Granger causality results
+granger_results = {}
+variables = var_results.model.endog_names  # Get the variable names from the VAR model
+
+# Loop through each pair of variables
+for i in range(len(variables)):
+    for j in range(len(variables)):
+        if i != j:
+            # Perform the Granger causality test
+            test_result = var_results.test_causality(variables[i], variables[j], kind='f')
+            # Save the result summary
+            granger_results[(variables[i], variables[j])] = test_result.summary()
+
+# Print all the results
+for key, value in granger_results.items():
+    print(f"Causality from {key[0]} to {key[1]}:\n{value}\n")
+
+```
+
+
+
+
+
+
+#### R
+
+ALL VARIABLES ARE STATIONARY NOW SO WE CAN IMPLEMENT THE VAR MODEL We split the data into 80-20 to compute the VAR and after check accuracy.
+
+
+
+```{r}
+df_caus=as.data.frame(df)
+
+i = 1
+for(i in 1:ncol(df))
+{
+  variable = colnames(df)[i]
+  cat("\n-------",variable,"--------\n")
+ print(causality(var_model,cause = variable)) 
+}
+
+#---------------------------------------------------------------
+
+
+
+
+```
+
+
+### 2.2.3 Impulse-Response Functions
+
+#### Python
+
+```{python}
+irf=var_results.irf(periods=5)
+irf.plot()
+plt.savefig("irf.png")
+
+plt.show() 
+
+
+fevd=var_results.fevd(5)
+fevd.summary()
+fevd.plot()
+plt.show() 
+
+```
+
+
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Get the IRF object from VAR results
+irf = var_results.irf(periods=5)
+
+# Use the correct variable name 'remittance'
+variable_name = 'remittance'
+assert variable_name in var_results.names, f"{variable_name} is not in the list of variables."
+
+# Find the index of 'remittance' in the variable list
+remittance_index = var_results.names.index(variable_name)
+
+# Get the number of variables
+num_vars = len(var_results.names)
+
+# Plot only the first half of the variables
+print("Plotting first half of the variables with confidence intervals:")
+for i in range(num_vars // 2):
+    if i != remittance_index:
+        fig = irf.plot(orth=False, impulse=variable_name, response=var_results.names[i])
+        plt.show()
+
+# Plot the second half of the variables
+print("Plotting second half of the variables with confidence intervals:")
+for i in range(num_vars // 2, num_vars):
+    if i != remittance_index:
+        fig = irf.plot(orth=False, impulse=variable_name, response=var_results.names[i])
+        plt.show()
+
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Get the IRF object from VAR results
+irf = var_results.irf(periods=5)
+
+# Use the correct variable name 'remittance'
+variable_name = 'remittance'
+assert variable_name in var_results.names, f"{variable_name} is not in the list of variables."
+
+# Store the axes from the figures
+axes_list = []
+
+# Plot the IRFs for all the variables including remittance itself
+print("Plotting variables with confidence intervals:")
+for i in range(len(var_results.names)):
+    fig = irf.plot(orth=False, impulse=variable_name, response=var_results.names[i])
+    axes_list.append(fig.axes[0])  # Store the axis
+    plt.close(fig)  # Close the individual figure to avoid displaying it
+
+# Create a new figure with a 6x2 grid
+fig, axes = plt.subplots(nrows=6, ncols=2, figsize=(15, 20))
+fig.suptitle(f'IRF of {variable_name} with Confidence Intervals', fontsize=16)
+
+# Flatten the axes array for easy iteration
+axes = axes.flatten()
+
+# Copy the axes from the individual plots to the new figure
+for plot_idx, src_ax in enumerate(axes_list):
+    dst_ax = axes[plot_idx]
+
+    # Transfer all elements from src_ax to dst_ax
+    for line in src_ax.get_lines():
+        dst_ax.plot(line.get_xdata(), line.get_ydata(), label=line.get_label(), color=line.get_color())
+    
+    for collection in src_ax.collections:
+        dst_ax.add_collection(collection)
+
+    # Remove the zero line by setting it to a non-visible color
+    for line in dst_ax.get_lines():
+        if np.all(line.get_ydata() == 0):
+            line.set_visible(False)
+
+    dst_ax.set_title(src_ax.get_title())
+    dst_ax.set_xlabel(src_ax.get_xlabel())
+    dst_ax.set_ylabel(src_ax.get_ylabel())
+    dst_ax.legend()
+    dst_ax.grid(True)
+
+# Adjust layout and show the plot
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+
+
+
+```
+
+
+
+
+
+```{python}
+
+import matplotlib.pyplot as plt
+
+# Get the IRF object from VAR results
+irf = var_results.irf(periods=5)
+
+# Use the correct variable name 'remittance'
+variable_name = 'remittance'
+assert variable_name in var_results.names, f"{variable_name} is not in the list of variables."
+
+# Find the index of 'remittance' in the variable list
+remittance_index = var_results.names.index(variable_name)
+
+# Store the figures
+figures = []
+
+# Plot the IRFs for all the variables including remittance itself
+print("Plotting variables with confidence intervals:")
+for i in range(len(var_results.names)):
+    fig = irf.plot(orth=False, impulse=variable_name, response=var_results.names[i])
+    figures.append(fig)
+
+# Create a new figure with a 6x2 grid
+fig, axes = plt.subplots(nrows=6, ncols=2, figsize=(15, 20))
+fig.suptitle(f'IRF of {variable_name} with Confidence Intervals', fontsize=16)
+
+# Flatten the axes array for easy iteration
+axes = axes.flatten()
+
+# Extract the axes from the individual plots and copy them to the new figure
+for plot_idx, fig in enumerate(figures):
+    src_ax = fig.axes[0]  # Source axis from individual plot
+    dst_ax = axes[plot_idx]  # Destination axis in the grid
+
+    # Copy data from the source axis to the destination axis
+    for line in src_ax.get_lines():
+        dst_ax.plot(line.get_xdata(), line.get_ydata(), label=line.get_label())
+
+    # Copy the fill_between data for confidence intervals
+    for poly in src_ax.collections:
+        paths = poly.get_paths()
+        if len(paths) > 0:
+            path = paths[0]
+            verts = path.vertices
+            dst_ax.fill_between(verts[:, 0], verts[:, 1], alpha=0.3, color=poly.get_facecolor()[0])
+
+    dst_ax.set_title(src_ax.get_title())
+    dst_ax.set_xlabel(src_ax.get_xlabel())
+    dst_ax.set_ylabel(src_ax.get_ylabel())
+    dst_ax.legend()
+    dst_ax.grid(True)
+
+# Adjust layout and show the plot
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+
+
+```
+
+
+
+```{python}
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+# Provided FEVD data for remittance
+fevd_remittance = {
+    'Horizon': [0, 1, 2, 3, 4],
+    'carbon': [0.112912, 0.136980, 0.137228, 0.139137, 0.138671],
+    'methane': [0.174177, 0.149611, 0.141285, 0.139958, 0.138730],
+    'temperatures': [0.066003, 0.036748, 0.035334, 0.034962, 0.034923],
+    'ocean_warming': [0.011666, 0.033343, 0.062510, 0.063797, 0.063853],
+    'sea_level': [0.018226, 0.037556, 0.046640, 0.046199, 0.047085],
+    'drought': [0.002893, 0.001589, 0.003779, 0.005096, 0.007991],
+    'flood': [0.041631, 0.061330, 0.057159, 0.056489, 0.056381],
+    'landslide': [0.034032, 0.038359, 0.041697, 0.043049, 0.042688],
+    'storm': [0.009154, 0.069903, 0.066830, 0.066454, 0.065906],
+    'wildfire': [0.041489, 0.046195, 0.046475, 0.047636, 0.048202],
+    'arctic_ice': [0.003299, 0.003861, 0.003623, 0.004640, 0.004621],
+    'remittance': [0.484518, 0.384524, 0.357440, 0.352585, 0.350950]
+}
+
+# Convert the dictionary to a DataFrame
+df_fevd_remittance = pd.DataFrame(fevd_remittance)
+
+# Set up the color palette
+colors = sns.color_palette("Paired", len(df_fevd_remittance.columns) - 1)
+
+# Plotting the FEVD for remittance using bar plots
+fig, ax = plt.subplots(figsize=(8, 5))
+
+# Position of bars on x-axis
+bar_width = 0.8
+positions = range(len(df_fevd_remittance))
+
+# Loop through each variable and create a bar for each horizon
+bottom = np.zeros(len(df_fevd_remittance))
+for i, column in enumerate(df_fevd_remittance.columns[1:]):
+    ax.bar(positions, df_fevd_remittance[column], bottom=bottom, color=colors[i], label=column, width=bar_width)
+    bottom += df_fevd_remittance[column]
+
+ax.set_title('Forecast Error Variance Decomposition (FEVD) for Remittance')
+ax.set_xlabel('Horizon')
+ax.set_ylabel('Proportion of Variance')
+ax.set_xticks(positions)
+ax.set_xticklabels(df_fevd_remittance['Horizon'])
+ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
+
+plt.tight_layout()
+plt.savefig("fevd_remittances.png")
+plt.show()
+
+
+
+```
+
+
+
+
+## 3. Predictions
+
+
+### R
+
+```{r}
+library(Metrics)
+
+# Extract fitted values from the VAR model
+fitted_values <- fitted(var_model)
+# Assuming the actual data is in the first column of train_matrix
+actual_values <- train_matrix[, 12]  # Adjust this if your actual data column is different
+
+# Calculate MSE using the Metrics package
+mse_value <- mse(actual_values, fitted_values[, 12])  # Ensure the right variable is selected
+print(paste("MSE of the VAR model is:", mse_value))
+
+
+```
+
+
+#### Ventana movil
+```{r}
+library(vars)
+library(Metrics)
+library(ggplot2)
+
+# Configurar parámetros iniciales
+window_size <- 25
+total_length <- nrow(train_matrix)
+steps_ahead <- 1
+
+# Listas para almacenar predicciones y valores reales
+predictions <- vector("numeric", total_length - window_size)
+actual_values <- vector("numeric", total_length - window_size)
+
+# Bucle para la validación cruzada con ventana móvil
+for (i in 1:(total_length - window_size)) {
+  # Seleccionar datos de entrenamiento
+  train_data <- train_matrix[1:(window_size + i ), ]
+  
+  # Ajustar modelo VAR
+  var_model <- VAR(train_data, p = 1, type = "const")
+  
+  # Predecir el siguiente paso
+  forecast <- predict(var_model, n.ahead = steps_ahead)
+  
+  # Almacenar la predicción y el valor real
+  predictions[i] <- forecast$fcst[[12]][, "fcst"]
+  actual_values[i] <- train_matrix[window_size + i, 12]
+}
+
+# Calcular el MSE usando Metrics
+mse_value <- mse(actual_values, predictions)
+
+# Imprimir el MSE
+print(paste("MSE of the forecasts is:", mse_value))
+
+# Imprimir los valores predichos y reales
+print("Predicted values:")
+print(predictions)
+print("Actual values:")
+print(actual_values)
+
+# Crear un data frame para graficar
+plot_data <- data.frame(
+  Time = (window_size + 1):(window_size + length(predictions)),
+  Prediction = predictions,
+  Actual = actual_values
+)
+
+# Graficar los resultados usando ggplot2
+ggplot(plot_data, aes(x = Time)) +
+  geom_line(aes(y = Prediction, colour = "Predicted"), linetype = "dashed") +
+  geom_line(aes(y = Actual, colour = "Actual")) +
+  labs(title = "Comparison of VAR Model Predictions vs Actual Data Remittance",
+       x = "Time", y = "Value",
+       colour = "Legend") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+
+
+### Python
+
+```{python}
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.api import VAR
+
+# Assuming ts_list_difff is your differenced time series data
+df = pd.DataFrame(ts_list_difff).dropna()
+
+# Create a new date range starting from 1992
+new_index = pd.date_range(start='1992', periods=len(df), freq='Y')
+df.index = new_index
+
+# Assuming 'var_results' is your fitted VAR model results object
+# and 'df' is your DataFrame with the actual data
+
+# Extract fitted values (predictions from the VAR model)
+fitted_values = var_results.fittedvalues
+
+# Extract the actual values for 'remittances' which is assumed to be the last column
+actual_values = df.iloc[:, -1]
+
+# Adjust the index of the fitted values to match the actual values
+fitted_values.index = df.index[var_results.k_ar:]
+
+# Ensure the indices of the fitted values match the actual values correctly
+fitted_values_aligned = fitted_values.iloc[:, -1]
+actual_values_aligned = actual_values.iloc[var_results.k_ar:]
+
+# Convert the datetime indices to years
+actual_values_aligned.index = actual_values_aligned.index.year
+fitted_values_aligned.index = fitted_values_aligned.index.year
+
+# Calculate MSE using the actual values and the predictions for the same variable
+mse_value_diff = mean_squared_error(actual_values_aligned, fitted_values_aligned)
+print(f"MSE of the VAR model for remittances is: {mse_value_diff}")
+
+# Plot the actual vs. fitted values for the remittances series
+plt.figure(figsize=(10, 5))
+plt.plot(actual_values_aligned.index, actual_values_aligned, label='Original Diff Remittances', color='blue')
+plt.plot(fitted_values_aligned.index, fitted_values_aligned, label='Fitted Diff Remittances', linestyle='--', color='orange')
+
+plt.title('Original vs Fitted Values for Remittances')
+plt.xlabel('Year')
+plt.ylabel('Remittance')
+plt.legend()
+plt.grid(True)
+plt.savefig("mse_in_sample.png")
+plt.show()
+
+
+```
+
+
+```{python}
+
+new_index = pd.date_range(start='1990', periods=len(data), freq='Y')
+
+# Set this new date range as the index for your DataFrame
+data.index = new_index
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.api import VAR
+
+# Assuming 'var_results' is your fitted VAR model results object
+# and 'data' is your DataFrame with the original actual data including the remittances column
+
+# Extract fitted values (predictions from the VAR model)
+fitted_values_diff = var_results.fittedvalues
+
+# Integrate the differenced fitted values to match the original scale
+initial_fitted_value = data.iloc[var_results.k_ar - 1, -1]  # k_ar is the number of lags in the VAR model
+fitted_values_level = fitted_values_diff.cumsum() + initial_fitted_value
+
+# Ensure the indices match for correct alignment
+fitted_values_level.index = data.index[var_results.k_ar:]
+
+# Extract the actual remittances values from the original data
+actual_values = data.iloc[:, -1]
+
+# Subset the actual values to start from the same index as fitted values
+actual_values_subset = actual_values[fitted_values_level.index]
+
+# Calculate MSE using the actual values and the integrated predictions for the same variable
+mse_value_int = mean_squared_error(actual_values_subset, fitted_values_level.iloc[:, -1])
+print(f"MSE of the VAR model for remittances is: {mse_value_int}")
+
+# Plot the actual vs. integrated fitted values for the remittances series
+plt.figure(figsize=(10, 5))
+plt.plot(actual_values_subset.index, actual_values_subset, label='Original Remittance', color='blue')
+plt.plot(fitted_values_level.index, fitted_values_level.iloc[:, -1], label='Fitted Remittance', linestyle='--', color='orange')
+
+plt.title('Original vs Fitted Values for Remittances')
+plt.xlabel('Year')
+plt.ylabel('Remittance')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+actual_values
+fitted_values_level
+actual_values_subset
+```
+
+
+```{python}
+results_table = pd.DataFrame({
+    'MSE Type': ['Integrated Series', 'Differenced Series'],
+    'MSE Value': [mse_value_int, mse_value_diff]
+})
+
+# Display the table
+print(results_table)
+
+
+from sklearn.metrics import mean_squared_error
+import numpy as np
+rmse_value_int = np.sqrt(mse_value_int)
+rmse_value_diff = np.sqrt(mse_value_diff)
+#print(f"RMSE of the VAR model for remittances on the integrated series is: {rmse_value_int}")
+print(f"RMSE of the VAR model for remittances on the differenced series is: {rmse_value_diff}")
+
+
+from sklearn.metrics import r2_score
+r2_value_int = r2_score(actual_values_aligned, fitted_values_aligned)
+r2_value_diff = r2_score(actual_values_subset, fitted_values_level.iloc[:, -1])
+#print(f"R² of the VAR model for remittances on the integrated series is: {r2_value_int}")
+#print(f"R² of the VAR model for remittances on the differenced series is: {r2_value_diff}")
+
+
+```
+
+
+#### Ventana
+
+not moving window, first iteration 25 años, second iteration 26 años....
+
+```{python, warning=FALSE, message=FALSE}
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.api import VAR
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# Assuming df is your DataFrame
+df = pd.DataFrame(ts_list_difff)  # Your data might already be loaded as shown in the # # Convert index to only include the year
+df.index = pd.to_datetime(df.index).year
+
+# Define initial parameters
+window_size = 25  # smaller window for example purposes
+total_length = len(df)
+steps_ahead = 1
+
+# Lists to store predictions and actual values
+predictions = []
+actual_values = []
+
+# Rolling window validation
+for i in range(window_size, total_length):
+    # Select training data
+    train_data = df.iloc[:i]
+
+    # Fit VAR model
+    model = VAR(train_data)
+    var_model = model.fit(lag_order,trend='c')
+
+    # Predict the next step
+    forecast = var_model.forecast(train_data.values[-var_model.k_ar:], steps=steps_ahead)
+    
+    # Store the forecast and actual value
+    predictions.append(forecast[0][11])  # Example for 'remittance' column
+    actual_values.append(df.iloc[i, 11])
+
+# Calculate MSE
+mse_value = mean_squared_error(actual_values, predictions)
+print(f"MSE of the forecasts is: {mse_value}")
+
+# Print actual and predicted values
+print("Predicted values:")
+print(predictions)
+print("Actual values:")
+print(actual_values)
+
+# Plotting the results
+plt.figure(figsize=(10, 5))
+plt.plot(df.index[window_size:], predictions, label='Predicted', linestyle='--')
+plt.plot(df.index[window_size:], actual_values, label='Actual')
+
+plt.title('Comparison of VAR Model Predictions vs Actual Data')
+plt.xlabel('Year')
+plt.ylabel('Value')
+
+# Ensure x-axis only shows years (setting major ticks to show every year if needed)
+plt.xticks(df.index[window_size:], df.index[window_size:].values, rotation=45)
+
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+
+moving window, siempre 25 años y se va moviendo:
+
+
+```{python}
+
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.api import VAR
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# Assuming df is your DataFrame and it is already loaded
+df = pd.DataFrame(ts_list_difff)
+df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
+
+# Define initial parameters
+window_size = 25  # Rolling window size
+lag_order = 1  # Set lag order as 1
+steps_ahead = 1  # Predicting one step ahead
+
+# Lists to store predictions and actual values
+predictions = []
+actual_values = []
+prediction_years = []
+
+# Rolling window validation
+for i in range(window_size, len(df) - steps_ahead + 1):
+    # Select training data for the current window
+    train_data = df.iloc[i - window_size:i]
+
+    # Fit VAR model
+    model = VAR(train_data)
+    var_model = model.fit(lag_order)
+
+    # Predict the next step
+    forecast = var_model.forecast(train_data.values[-var_model.k_ar:], steps=steps_ahead)
+
+    # Store the forecast and actual value
+    predictions.append(forecast[0][11])  # Example for 'remittance' column
+    actual_values.append(df.iloc[i, 11])
+    prediction_years.append(df.index[i])
+
+# Calculate MSE
+mse_value = mean_squared_error(actual_values, predictions)
+print(f"MSE of the forecasts is: {mse_value}")
+
+# Calculate RMSE
+rmse_value = np.sqrt(mse_value)
+print(f"RMSE of the forecasts is: {rmse_value}")
+
+# Print actual and predicted values
+print("Predicted values:")
+print(predictions)
+print("Actual values:")
+print(actual_values)
+
+# Plotting the results
+plt.figure(figsize=(10, 6))
+plt.plot(prediction_years, predictions, label='Predicted Diff Remittances', linestyle='--', color='orange')
+plt.plot(prediction_years, actual_values, label='Original Diff Remittances', color='blue')
+
+plt.title('Comparison of VAR Model Predictions vs Original Data')
+plt.xlabel('Year')
+plt.ylabel('Value')
+
+# Ensure x-axis only shows years
+plt.xticks(ticks=prediction_years, labels=prediction_years, rotation=0)
+
+plt.legend()
+plt.grid(True)
+plt.savefig("mse_window.png")
+plt.show()
+rmse_value = np.sqrt(mse_value)
+
+
+```
+
+
+```{python}
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.api import VAR
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# Assuming df is your DataFrame and it is already loaded
+df = pd.DataFrame(ts_list_difff)
+df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
+
+# Define initial parameters
+window_size = 25  # Rolling window size
+lag_order = 1  # Set lag order as 1
+steps_ahead = 1  # Predicting one step ahead
+
+# Lists to store predictions and actual values
+predictions = []
+actual_values = []
+prediction_years = []
+
+# Rolling window validation
+for i in range(window_size, len(df) - steps_ahead + 1):
+    # Select training data for the current window
+    train_data = df.iloc[i - window_size:i]
+
+    # Fit VAR model
+    model = VAR(train_data)
+    var_model = model.fit(lag_order)
+
+    # Predict the next step
+    forecast = var_model.forecast(train_data.values[-var_model.k_ar:], steps=steps_ahead)
+
+    # Store the forecast and actual value
+    predictions.append(forecast[0][11])  # Example for 'remittance' column
+    actual_values.append(df.iloc[i, 11])
+    prediction_years.append(df.index[i])
+
+# Calculate MSE
+mse_value = mean_squared_error(actual_values, predictions)
+print(f"MSE of the forecasts is: {mse_value}")
+
+# Calculate RMSE
+rmse_value = np.sqrt(mse_value)
+print(f"RMSE of the forecasts is: {rmse_value}")
+
+# Forecasting the next 5 years
+future_years = [year for year in range(df.index[-1] + 1, df.index[-1] + 6)]
+last_window = df.iloc[-window_size:]  # Last available window of data
+
+for year in future_years:
+    # Fit VAR model on the last window
+    model = VAR(last_window)
+    var_model = model.fit(lag_order)
+
+    # Predict the next step
+    forecast = var_model.forecast(last_window.values[-var_model.k_ar:], steps=steps_ahead)
+
+    # Append the forecast to the predictions and update the window
+    last_window = last_window.append(pd.DataFrame([forecast[0]], columns=last_window.columns, index=[year]))
+    predictions.append(forecast[0][11])
+    prediction_years.append(year)
+
+# Print actual and predicted values
+print("Predicted values:")
+print(predictions)
+print("Actual values:")
+print(actual_values)
+
+# Plotting the results
+plt.figure(figsize=(10, 6))
+plt.plot(prediction_years, predictions, label='Predicted Diff Remittances', linestyle='--', color='orange')
+plt.plot(df.index[-len(actual_values):], actual_values, label='Original Diff Remittances', color='blue')
+
+plt.title('Comparison of VAR Model Forecast vs Original Data')
+plt.xlabel('Year')
+plt.ylabel('Value')
+
+# Ensure x-axis only shows years
+plt.xticks(ticks=prediction_years, labels=prediction_years, rotation=0)
+
+plt.legend()
+plt.grid(True)
+plt.savefig("mse_window_forecast.png")
+plt.show()
+
+```
+
+```{python}
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.api import VAR
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# Assuming df is your DataFrame and it is already loaded
+df = pd.DataFrame(ts_list_difff)
+df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
+
+# Define initial parameters
+window_size = 25  # Rolling window size
+lag_order = 1  # Set lag order as 1
+steps_ahead = 1  # Predicting one step ahead
+
+# Lists to store predictions and actual values
+predictions_to_convert = df.iloc[:window_size, 11].tolist()  # Include initial values from the original data
+actual_values = []
+prediction_years = df.index[:window_size].tolist()
+
+# Rolling window validation
+for i in range(window_size, len(df) - steps_ahead + 1):
+    # Select training data for the current window
+    train_data = df.iloc[i - window_size:i]
+
+    # Fit VAR model
+    model = VAR(train_data)
+    var_model = model.fit(lag_order)
+
+    # Predict the next step
+    forecast = var_model.forecast(train_data.values[-var_model.k_ar:], steps=steps_ahead)
+
+    # Store the forecast and actual value
+    predictions_to_convert.append(forecast[0][11])  # Example for 'remittance' column
+    actual_values.append(df.iloc[i, 11])
+    prediction_years.append(df.index[i])
+
+# Forecasting the next 5 years
+future_years = [year for year in range(df.index[-1] + 1, df.index[-1] + 6)]
+last_window = df.iloc[-window_size:]  # Last available window of data
+
+for year in future_years:
+    # Fit VAR model on the last window
+    model = VAR(last_window)
+    var_model = model.fit(lag_order)
+
+    # Predict the next step
+    forecast = var_model.forecast(last_window.values[-var_model.k_ar:], steps=steps_ahead)
+
+    # Append the forecast to the predictions and update the window
+    last_window = last_window.append(pd.DataFrame([forecast[0]], columns=last_window.columns, index=[year]))
+    predictions_to_convert.append(forecast[0][11])
+    prediction_years.append(year)
+
+# Print actual and predicted values
+print("Predicted values to convert:")
+print(predictions_to_convert)
+
+
+```
+
+```{python}
+print(predictions_to_convert)
+
+initial_value_1990 = ts_remittences.loc['1990']
+
+# Value from the cut year 1991
+initial_value_1991 = -0.06513
+
+# Start the reconstruction process
+predictions_converted_full = [initial_value_1990, initial_value_1990 + initial_value_1991]
+for value in predictions_to_convert:
+    predictions_converted_full.append(predictions_converted_full[-1] + value)
+
+# Print the converted values
+print("Predictions converted to original scale:")
+print(predictions_converted_full)
+
+# Create a date range starting from 1990 to match the original series
+start_year = 1990
+years = pd.date_range(start=f'{start_year}', periods=len(predictions_converted_full), freq='Y')
+
+# Create a DataFrame for plotting
+df_predictions = pd.DataFrame({'Year': years, 'Predicted Remittances': predictions_converted_full})
+df_predictions.set_index('Year', inplace=True)
+
+# Create a DataFrame for the original series with the same years
+df_original = pd.DataFrame({'Year': years[:len(ts_remittences)], 'Original Remittances': ts_remittences})
+df_original.set_index('Year', inplace=True)
+
+# Plot the results
+plt.figure(figsize=(10, 6))
+plt.plot(df_original.index, df_original['Original Remittances'], linestyle='-', color='blue', label='Original Remittances')
+plt.plot(df_predictions.index, df_predictions['Predicted Remittances'], linestyle='--', color='orange', label='Predicted Remittances')
+plt.title('Comparison of VAR Model Forecast vs Original Data with Original Scale')
+plt.xlabel('Year')
+plt.ylabel('Remittances')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Print the converted values with their corresponding years
+print("Predictions converted to original scale with years:")
+print(df_predictions)
+
+plt.savefig("mse_window_forecast_original.png")
+
+df_predictions_relevant = df_predictions.loc['2017':'2021']
+df_predictions_relevant
+
+df_original_relevant = df_original.loc['2017':'2021']
+df_original_relevant
+
+
+df_predictions_relevant = df_predictions_relevant.sort_index()
+df_original_relevant = df_original_relevant.sort_index()
+
+# Check if indices are aligned
+if not df_predictions_relevant.index.equals(df_original_relevant.index):
+    raise ValueError("The indices of the prediction and original data do not match.")
+
+# Calculate MSE and RMSE for the relevant period
+mse = mean_squared_error(df_original_relevant, df_predictions_relevant)
+rmse = np.sqrt(mse)
+
+print(f'MSE: {mse}')
+print(f'RMSE: {rmse}')
+
+```
+
+
+
+## 4. NNVAR
+
+
+
+```{python}
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import Dense, Dropout
+import pandas as pd
+from matplotlib import pyplot as plt
+from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+#from datetime import datetime
+
+df=pd.DataFrame(ts_list)
+
+train_dates = df.index
+print(train_dates[-15:])  # Check last few dates
+
+# Variables for training
+cols = df.columns
+print(cols) # Print columns to verify
+
+df_for_training = df.astype(float)
+
+# Normalize the dataset
+scaler = StandardScaler()
+scaler = scaler.fit(df_for_training)
+df_for_training_scaled = scaler.transform(df_for_training)
+
+
+#df_for_training_scaled = pd.DataFrame(df_for_training_scaled, columns=df_for_training.columns, index=df.index)
+#print(df_for_training_scaled.head()) 
+
+n_past = 14   # Number of past days we want to use to predict the future
+n_predict = 1  # Number of future days we want to predict
+
+trainX = []
+trainY = []
+
+#Reformat input data into a shape: (n_samples x timesteps x n_features)
+#In my example, my df_for_training_scaled has a shape (12823, 5)
+#12823 refers to the number of data points and 5 refers to the columns (multi-variables).
+for i in range(n_past, len(df_for_training_scaled) - n_future +1):
+    trainX.append(df_for_training_scaled[i - n_past:i, 0:df_for_training.shape[1]])
+    trainY.append(df_for_training_scaled[i + n_future - 1:i + n_future, 0])
+
+
+trainX, trainY = np.array(trainX), np.array(trainY)
+
+print('trainX shape == {}.'.format(trainX.shape))
+print('trainY shape == {}.'.format(trainY.shape))
+
+
+# Define the LSTM model
+model = Sequential()
+model.add(LSTM(64, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))
+model.add(LSTM(32, activation='relu', return_sequences=False))
+model.add(Dropout(0.2))
+model.add(Dense(1))
+
+model.compile(optimizer='adam', loss='mse')
+model.summary()
+
+# Fit the model
+history = model.fit(trainX, trainY, epochs=50, batch_size=16, validation_split=0.1, verbose=1)
+
+print(history.history.keys())
+
+# Print the loss values for each epoch
+print("Training loss values: ", history.history['loss'])
+print("Validation loss values: ", history.history['val_loss'])
+
+# Plot the training and validation loss values
+plt.figure(figsize=(12, 6))
+plt.plot(history.history['loss'], label='Training loss')
+plt.plot(history.history['val_loss'], label='Validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss')
+plt.legend()
+plt.show()
+
+
+
+n_future = 7  # Number of years we want to predict into the future
+# Adjust to start forecasting from the year after the last available year
+datelist_future = pd.date_range(datelist_train[-1], periods=n_future+1, freq='Y').tolist()[1:]
+datelist_train = df.index
+
+# Convert Pandas Timestamp to Datetime object (for transformation) --> FUTURE
+datelist_future_ = [this_timestamp.date() for this_timestamp in datelist_future]
+
+# Make predictions for future dates
+predictions_future = model.predict(trainX[-1:])
+
+
+prediction_copies = np.repeat(predictions_future, df_for_training.shape[1], axis=-1)
+y_pred_future = scaler.inverse_transform(prediction_copies)[:,-1]
+datelist_train = df.index
+
+# Create DataFrame for future predictions
+PREDICTIONS_FUTURE = pd.DataFrame(y_pred_future, columns=['Predicted Remittences']).set_index(pd.Series(datelist_future_))
+
+# Plotting
+plt.figure(figsize=(14, 8))
+sns.lineplot(data=df, x=df.index, y='remittence', label='Original Remittences')
+sns.lineplot(data=PREDICTIONS_FUTURE, x=PREDICTIONS_FUTURE.index, y='Predicted Remittences', label='Predicted Remittences')
+plt.axvline(x=df.index[-1], color='blue', linestyle='--')
+plt.legend()
+plt.show()
+
+```
+
+
+
+
+
+
+```{python}
+import numpy as np
+import pandas as pd
+import random
+import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Input
+
+# Set the seed for reproducibility
+def set_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+    tf.random.set_seed(seed)
+
+set_seed(1)
+
+# Load the data
+remittence = df['remittence'].values
+
+# Scale the data
+scaler = MinMaxScaler(feature_range=(0, 1))
+scaled_data = scaler.fit_transform(df)
+
+# Create dataset for supervised learning
+def create_dataset(dataset, time_step=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset) - time_step - 1):
+        dataX.append(dataset[i:(i + time_step), :])
+        dataY.append(dataset[i + time_step, :])
+    return np.array(dataX), np.array(dataY)
+
+time_step = 10
+X, y = create_dataset(scaled_data, time_step)
+X = X.reshape(X.shape[0], X.shape[1], X.shape[2])  # [samples, time steps, features]
+
+session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+tf.compat.v1.keras.backend.set_session(sess)
+# Build the LSTM model
+model = Sequential()
+model.add(Input(shape=(time_step, df.shape[1])))
+model.add(LSTM(50, return_sequences=True))
+model.add(LSTM(50, return_sequences=False))
+model.add(Dense(25))
+model.add(Dense(df.shape[1]))  # Predict all features
+
+model.compile(optimizer='adam', loss='mean_squared_error')
+model.fit(X, y, epochs=50, batch_size=32, validation_split=0.2)
+
+# Make predictions
+predictions_scaled = model.predict(X)
+predictions = scaler.inverse_transform(predictions_scaled)  # Inverse transform all features
+
+# Calculate MSE and RMSE for the "remittence" column
+mse = mean_squared_error(remittence[time_step+1:], predictions[:, df.columns.get_loc('remittence')])
+rmse = np.sqrt(mse)
+print(f'MSE: {mse}')
+print(f'RMSE: {rmse}')
+
+# Forecast the next 5 years
+last_sequence = scaled_data[-time_step:, :].reshape((1, time_step, df.shape[1]))
+future_predictions = []
+
+for _ in range(5):
+    next_pred = model.predict(last_sequence)
+    future_predictions.append(next_pred[0, :])
+    last_sequence = np.append(last_sequence[:, 1:, :], np.expand_dims(next_pred, axis=1), axis=1)
+
+future_predictions = np.array(future_predictions)
+future_predictions_inversed = scaler.inverse_transform(future_predictions)
+
+# Extract the "remittence" column from future predictions
+future_remittence = future_predictions_inversed[:, df.columns.get_loc('remittence')]
+
+# Create extended remittence array
+extended_remittence = np.concatenate((remittence, future_remittence))
+
+data = np.array(extended_remittence)
+
+# Years from 1990
+years = np.arange(1990, 1990 + len(data))
+
+# Plotting the data
+plt.figure(figsize=(12, 6))
+plt.plot(years, data, label=' Original Remittances', color='blue')
+plt.plot(years[-5:], data[-5:], label='Predicted Remittances ', color='orange')
+plt.xlabel('Year')
+plt.ylabel('Remittence')
+plt.title('Remittence Over Years with Values forecasted with LSTM')
+plt.legend()
+plt.grid(True)  # Añadir esta línea para mostrar la cuadrícula
+plt.show()
+
+#plt.savefig("mse_window_forecast_nn.png")
+
+
+```
+
+
