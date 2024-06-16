@@ -11,6 +11,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE )
 ```
 
+# 0.DATA
+
+
 ```{r data,eval=FALSE}
 
 #NASA
@@ -360,9 +363,6 @@ Package `imputeTS` for imputing NAs in time series:
 
 The imputation method chosed is Kalman with Auto.Arima
 
-The Kalman filter,it's a mathematical method that keeps updating and improving its estimates or predictions of what's happening in a process over time, even when some of the incoming information is incomplete or has some errors. It's constantly taking in new measurements, comparing them with its predictions, and then tweaking those predictions to be more accurate. Now, when it's paired with auto.arima, which picks the best ARIMA model we can put them to work together.
-
-Auto.arima automatically finds patterns in the data---like trends and seasonal swings---and selects the best formula to describe these patterns. Then the Kalman filter uses this formula to make its "guesses" for the missing points.
 
 ```{r impnas, fig.align='center', warning=FALSE, message=FALSE}
 
@@ -590,12 +590,6 @@ Now all predictor variables have VIFs below 10. Multicollinearity solved.
 ## 2.1 STATIONARITY
 
 We dont have seasonality as we have annual data, so we will check the trend:
-
--   If a series has a deterministic trend (e.g., it consistently increases by a certain amount each period), it is non-stationary because the mean changes over time. However, this non-stationarity can often be removed by detrending the series (e.g., by subtracting the fitted trend line from the original series).
-
--   If a series has a unit root, the non-stationarity cannot be removed simply by detrending because the underlying process has a stochastic trend. Instead, differencing the series (taking the change from one period to the next) is a common approach to achieve stationarity.
-
-Unit root tests such as the Augmented Dickey-Fuller (ADF) test or the Phillips-Perron (PP) test are designed to distinguish between a unit root non-stationarity and other types of non-stationarity or stationarity. They test the null hypothesis that a unit root is present against the alternative that the series is stationary or has a deterministic trend.
 
 The ADF test addresses whether a time series is non-stationary and possesses a unit root; its null hypothesis is that the series has a unit root (indicating non-stationarity), against the alternative hypothesis of stationarity. The test includes lagged difference terms in its regression to account for autocorrelation.
 
@@ -1265,7 +1259,7 @@ ts_list_difff=list(
 
 ```
 
-## 2.2 CORRELATIONS
+## 2.2 CORRELATIONS on differentiated series
 
 ```{r}
 
@@ -1287,7 +1281,7 @@ print(cor_matrix_latex_2, file = "correlation_matrix_2_diff.tex")
 
 ```
 
-### 2.2.1 Multicollinearity
+### 2.2.1 Multicollinearity on differentiated series
 
 As we have differenciated the time series, now they have different length, so we will truncate it to the lowest length to be able to perform VIF
 
@@ -1301,9 +1295,7 @@ ts_list_difff <- lapply(ts_list_difff, function(x) tail(x, shortest_length))
 # Combine the truncated time series into a data frame
 df <- data.frame(ts_list_difff)
 
-# Now you can run your VIF analysis
-# Fit a linear model with all variables as predictors
-lm_model <- lm(remittence ~ ., data = df) # Replace 'remittance' with the actual name of your dependent variable
+lm_model <- lm(remittence ~ ., data = df) 
 vif_results <- vif(lm_model)
 print(vif_results)
 
@@ -1322,7 +1314,7 @@ print(vif_latex, file = "vif_results_diff.tex", include.rownames = FALSE)
 ```
 
 
-## SPLIT
+## SPLIT (tried but finally not done as explained in the report)
 
 ```{r, eval=FALSE}
 
@@ -1382,8 +1374,6 @@ for var_name, ts_data in ts_list_difff.items():
 ```
 
 
-
-Now that the series are stationary we dont have multicollinearity.
 
 ## 2.2 VAR
 
@@ -1554,7 +1544,7 @@ optimal_lags <- var_results$selection["AIC(n)"]
 optimal_lags
 ```
 
-no podemos implementar 2 porque peta
+also here not possible to use lag=2
 
 ```{r}
 library(vars)
@@ -1661,7 +1651,6 @@ for variable in var_results.names:
 
 import statsmodels.api as sm
 
-# Dictionary to store the Granger causality results
 granger_results = {}
 variables = var_results.model.endog_names  # Get the variable names from the VAR model
 
@@ -1745,8 +1734,6 @@ for key, value in granger_results.items():
 
 #### R
 
-ALL VARIABLES ARE STATIONARY NOW SO WE CAN IMPLEMENT THE VAR MODEL We split the data into 80-20 to compute the VAR and after check accuracy.
-
 
 
 ```{r}
@@ -1768,7 +1755,7 @@ for(i in 1:ncol(df))
 ```
 
 
-### 2.2.3 Impulse-Response Functions
+### 2.2.3 Impulse-Response Functions and FEVD
 
 #### Python
 
@@ -1885,70 +1872,9 @@ plt.show()
 
 
 
-```{python}
-
-import matplotlib.pyplot as plt
-
-# Get the IRF object from VAR results
-irf = var_results.irf(periods=5)
-
-# Use the correct variable name 'remittance'
-variable_name = 'remittance'
-assert variable_name in var_results.names, f"{variable_name} is not in the list of variables."
-
-# Find the index of 'remittance' in the variable list
-remittance_index = var_results.names.index(variable_name)
-
-# Store the figures
-figures = []
-
-# Plot the IRFs for all the variables including remittance itself
-print("Plotting variables with confidence intervals:")
-for i in range(len(var_results.names)):
-    fig = irf.plot(orth=False, impulse=variable_name, response=var_results.names[i])
-    figures.append(fig)
-
-# Create a new figure with a 6x2 grid
-fig, axes = plt.subplots(nrows=6, ncols=2, figsize=(15, 20))
-fig.suptitle(f'IRF of {variable_name} with Confidence Intervals', fontsize=16)
-
-# Flatten the axes array for easy iteration
-axes = axes.flatten()
-
-# Extract the axes from the individual plots and copy them to the new figure
-for plot_idx, fig in enumerate(figures):
-    src_ax = fig.axes[0]  # Source axis from individual plot
-    dst_ax = axes[plot_idx]  # Destination axis in the grid
-
-    # Copy data from the source axis to the destination axis
-    for line in src_ax.get_lines():
-        dst_ax.plot(line.get_xdata(), line.get_ydata(), label=line.get_label())
-
-    # Copy the fill_between data for confidence intervals
-    for poly in src_ax.collections:
-        paths = poly.get_paths()
-        if len(paths) > 0:
-            path = paths[0]
-            verts = path.vertices
-            dst_ax.fill_between(verts[:, 0], verts[:, 1], alpha=0.3, color=poly.get_facecolor()[0])
-
-    dst_ax.set_title(src_ax.get_title())
-    dst_ax.set_xlabel(src_ax.get_xlabel())
-    dst_ax.set_ylabel(src_ax.get_ylabel())
-    dst_ax.legend()
-    dst_ax.grid(True)
-
-# Adjust layout and show the plot
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.show()
-
-
-```
-
-
 
 ```{python}
-
+# needed to be implemented by hand to change the colors
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1971,10 +1897,9 @@ fevd_remittance = {
     'remittance': [0.484518, 0.384524, 0.357440, 0.352585, 0.350950]
 }
 
-# Convert the dictionary to a DataFrame
 df_fevd_remittance = pd.DataFrame(fevd_remittance)
 
-# Set up the color palette
+# color palette
 colors = sns.color_palette("Paired", len(df_fevd_remittance.columns) - 1)
 
 # Plotting the FEVD for remittance using bar plots
@@ -2013,73 +1938,74 @@ plt.show()
 
 ### R
 
+#### In-sample forecast
 ```{r}
 library(Metrics)
 
 # Extract fitted values from the VAR model
 fitted_values <- fitted(var_model)
-# Assuming the actual data is in the first column of train_matrix
-actual_values <- train_matrix[, 12]  # Adjust this if your actual data column is different
+# the actual data is in the last column of train_matrix
+actual_values <- train_matrix[, 12]  
 
-# Calculate MSE using the Metrics package
-mse_value <- mse(actual_values, fitted_values[, 12])  # Ensure the right variable is selected
+# MSE using the Metrics package
+mse_value <- mse(actual_values, fitted_values[, 12])  
 print(paste("MSE of the VAR model is:", mse_value))
 
 
 ```
 
 
-#### Ventana movil
+#### Rolling Window Forecast
+
 ```{r}
 library(vars)
 library(Metrics)
 library(ggplot2)
 
-# Configurar parámetros iniciales
+# initial parameters
 window_size <- 25
 total_length <- nrow(train_matrix)
 steps_ahead <- 1
 
-# Listas para almacenar predicciones y valores reales
+
 predictions <- vector("numeric", total_length - window_size)
 actual_values <- vector("numeric", total_length - window_size)
 
-# Bucle para la validación cruzada con ventana móvil
+# Loop for cross validation rolling window 
 for (i in 1:(total_length - window_size)) {
-  # Seleccionar datos de entrenamiento
+  # train
   train_data <- train_matrix[1:(window_size + i ), ]
   
-  # Ajustar modelo VAR
+  # modelo VAR
   var_model <- VAR(train_data, p = 1, type = "const")
   
-  # Predecir el siguiente paso
+  # next step
   forecast <- predict(var_model, n.ahead = steps_ahead)
   
-  # Almacenar la predicción y el valor real
+  # prediction and actual value
   predictions[i] <- forecast$fcst[[12]][, "fcst"]
   actual_values[i] <- train_matrix[window_size + i, 12]
 }
 
-# Calcular el MSE usando Metrics
+# MSE using Metrics
 mse_value <- mse(actual_values, predictions)
 
-# Imprimir el MSE
+# MSE
 print(paste("MSE of the forecasts is:", mse_value))
 
-# Imprimir los valores predichos y reales
+
 print("Predicted values:")
 print(predictions)
 print("Actual values:")
 print(actual_values)
 
-# Crear un data frame para graficar
 plot_data <- data.frame(
   Time = (window_size + 1):(window_size + length(predictions)),
   Prediction = predictions,
   Actual = actual_values
 )
 
-# Graficar los resultados usando ggplot2
+# plot
 ggplot(plot_data, aes(x = Time)) +
   geom_line(aes(y = Prediction, colour = "Predicted"), linetype = "dashed") +
   geom_line(aes(y = Actual, colour = "Actual")) +
@@ -2095,6 +2021,8 @@ ggplot(plot_data, aes(x = Time)) +
 
 ### Python
 
+#### In-sample forecast
+
 ```{python}
 
 import pandas as pd
@@ -2102,38 +2030,35 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.api import VAR
 
-# Assuming ts_list_difff is your differenced time series data
 df = pd.DataFrame(ts_list_difff).dropna()
 
-# Create a new date range starting from 1992
+# new date range starting from 1992
 new_index = pd.date_range(start='1992', periods=len(df), freq='Y')
 df.index = new_index
 
-# Assuming 'var_results' is your fitted VAR model results object
-# and 'df' is your DataFrame with the actual data
 
-# Extract fitted values (predictions from the VAR model)
+# fitted values (predictions from the VAR model)
 fitted_values = var_results.fittedvalues
 
-# Extract the actual values for 'remittances' which is assumed to be the last column
+# actual values for 'remittances', last column
 actual_values = df.iloc[:, -1]
 
 # Adjust the index of the fitted values to match the actual values
 fitted_values.index = df.index[var_results.k_ar:]
 
-# Ensure the indices of the fitted values match the actual values correctly
+# indices of the fitted values match the actual values correctly
 fitted_values_aligned = fitted_values.iloc[:, -1]
 actual_values_aligned = actual_values.iloc[var_results.k_ar:]
 
-# Convert the datetime indices to years
+# datetime indices to years
 actual_values_aligned.index = actual_values_aligned.index.year
 fitted_values_aligned.index = fitted_values_aligned.index.year
 
-# Calculate MSE using the actual values and the predictions for the same variable
+# MSE
 mse_value_diff = mean_squared_error(actual_values_aligned, fitted_values_aligned)
 print(f"MSE of the VAR model for remittances is: {mse_value_diff}")
 
-# Plot the actual vs. fitted values for the remittances series
+# Plot 
 plt.figure(figsize=(10, 5))
 plt.plot(actual_values_aligned.index, actual_values_aligned, label='Original Diff Remittances', color='blue')
 plt.plot(fitted_values_aligned.index, fitted_values_aligned, label='Fitted Diff Remittances', linestyle='--', color='orange')
@@ -2149,42 +2074,35 @@ plt.show()
 
 ```
 
+additional plot in original scale
 
 ```{python}
 
 new_index = pd.date_range(start='1990', periods=len(data), freq='Y')
 
-# Set this new date range as the index for your DataFrame
+# new date range as the index 
 data.index = new_index
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.api import VAR
 
-# Assuming 'var_results' is your fitted VAR model results object
-# and 'data' is your DataFrame with the original actual data including the remittances column
-
-# Extract fitted values (predictions from the VAR model)
 fitted_values_diff = var_results.fittedvalues
 
-# Integrate the differenced fitted values to match the original scale
 initial_fitted_value = data.iloc[var_results.k_ar - 1, -1]  # k_ar is the number of lags in the VAR model
 fitted_values_level = fitted_values_diff.cumsum() + initial_fitted_value
 
-# Ensure the indices match for correct alignment
 fitted_values_level.index = data.index[var_results.k_ar:]
 
-# Extract the actual remittances values from the original data
 actual_values = data.iloc[:, -1]
 
-# Subset the actual values to start from the same index as fitted values
 actual_values_subset = actual_values[fitted_values_level.index]
 
-# Calculate MSE using the actual values and the integrated predictions for the same variable
+#  MSE
 mse_value_int = mean_squared_error(actual_values_subset, fitted_values_level.iloc[:, -1])
 print(f"MSE of the VAR model for remittances is: {mse_value_int}")
 
-# Plot the actual vs. integrated fitted values for the remittances series
+# Plot
 plt.figure(figsize=(10, 5))
 plt.plot(actual_values_subset.index, actual_values_subset, label='Original Remittance', color='blue')
 plt.plot(fitted_values_level.index, fitted_values_level.iloc[:, -1], label='Fitted Remittance', linestyle='--', color='orange')
@@ -2201,6 +2119,7 @@ fitted_values_level
 actual_values_subset
 ```
 
+results of accuracy 
 
 ```{python}
 results_table = pd.DataFrame({
@@ -2208,7 +2127,6 @@ results_table = pd.DataFrame({
     'MSE Value': [mse_value_int, mse_value_diff]
 })
 
-# Display the table
 print(results_table)
 
 
@@ -2230,9 +2148,9 @@ r2_value_diff = r2_score(actual_values_subset, fitted_values_level.iloc[:, -1])
 ```
 
 
-#### Ventana
+#### Expanding window (not rolling)
 
-not moving window, first iteration 25 años, second iteration 26 años....
+not moving window, first iteration 25 años, second iteration 26 años.... Finally not used
 
 ```{python, warning=FALSE, message=FALSE}
 import pandas as pd
@@ -2242,25 +2160,22 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-# Assuming df is your DataFrame
-df = pd.DataFrame(ts_list_difff)  # Your data might already be loaded as shown in the # # Convert index to only include the year
+df = pd.DataFrame(ts_list_difff)  
 df.index = pd.to_datetime(df.index).year
 
-# Define initial parameters
-window_size = 25  # smaller window for example purposes
+window_size = 25  
 total_length = len(df)
 steps_ahead = 1
 
-# Lists to store predictions and actual values
 predictions = []
 actual_values = []
 
-# Rolling window validation
+# window validation
 for i in range(window_size, total_length):
-    # Select training data
+    # training data
     train_data = df.iloc[:i]
 
-    # Fit VAR model
+    #  VAR model
     model = VAR(train_data)
     var_model = model.fit(lag_order,trend='c')
 
@@ -2271,17 +2186,16 @@ for i in range(window_size, total_length):
     predictions.append(forecast[0][11])  # Example for 'remittance' column
     actual_values.append(df.iloc[i, 11])
 
-# Calculate MSE
+# MSE
 mse_value = mean_squared_error(actual_values, predictions)
 print(f"MSE of the forecasts is: {mse_value}")
 
-# Print actual and predicted values
 print("Predicted values:")
 print(predictions)
 print("Actual values:")
 print(actual_values)
 
-# Plotting the results
+# Plot
 plt.figure(figsize=(10, 5))
 plt.plot(df.index[window_size:], predictions, label='Predicted', linestyle='--')
 plt.plot(df.index[window_size:], actual_values, label='Actual')
@@ -2290,7 +2204,6 @@ plt.title('Comparison of VAR Model Predictions vs Actual Data')
 plt.xlabel('Year')
 plt.ylabel('Value')
 
-# Ensure x-axis only shows years (setting major ticks to show every year if needed)
 plt.xticks(df.index[window_size:], df.index[window_size:].values, rotation=45)
 
 plt.legend()
@@ -2298,8 +2211,9 @@ plt.grid(True)
 plt.show()
 ```
 
-moving window, siempre 25 años y se va moviendo:
+#### Moving window
 
+always 25 years and moves
 
 ```{python}
 
@@ -2310,26 +2224,24 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-# Assuming df is your DataFrame and it is already loaded
 df = pd.DataFrame(ts_list_difff)
 df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
 
-# Define initial parameters
+# initial parameters
 window_size = 25  # Rolling window size
 lag_order = 1  # Set lag order as 1
 steps_ahead = 1  # Predicting one step ahead
 
-# Lists to store predictions and actual values
 predictions = []
 actual_values = []
 prediction_years = []
 
 # Rolling window validation
 for i in range(window_size, len(df) - steps_ahead + 1):
-    # Select training data for the current window
+    #  training data for the current window
     train_data = df.iloc[i - window_size:i]
 
-    # Fit VAR model
+    #  VAR model
     model = VAR(train_data)
     var_model = model.fit(lag_order)
 
@@ -2341,21 +2253,20 @@ for i in range(window_size, len(df) - steps_ahead + 1):
     actual_values.append(df.iloc[i, 11])
     prediction_years.append(df.index[i])
 
-# Calculate MSE
+# MSE
 mse_value = mean_squared_error(actual_values, predictions)
 print(f"MSE of the forecasts is: {mse_value}")
 
-# Calculate RMSE
+# RMSE
 rmse_value = np.sqrt(mse_value)
 print(f"RMSE of the forecasts is: {rmse_value}")
 
-# Print actual and predicted values
 print("Predicted values:")
 print(predictions)
 print("Actual values:")
 print(actual_values)
 
-# Plotting the results
+# Plot
 plt.figure(figsize=(10, 6))
 plt.plot(prediction_years, predictions, label='Predicted Diff Remittances', linestyle='--', color='orange')
 plt.plot(prediction_years, actual_values, label='Original Diff Remittances', color='blue')
@@ -2364,7 +2275,6 @@ plt.title('Comparison of VAR Model Predictions vs Original Data')
 plt.xlabel('Year')
 plt.ylabel('Value')
 
-# Ensure x-axis only shows years
 plt.xticks(ticks=prediction_years, labels=prediction_years, rotation=0)
 
 plt.legend()
@@ -2376,6 +2286,8 @@ rmse_value = np.sqrt(mse_value)
 
 ```
 
+#### Forecast with rolling window
+full plot with forecast
 
 ```{python}
 import pandas as pd
@@ -2385,23 +2297,21 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-# Assuming df is your DataFrame and it is already loaded
 df = pd.DataFrame(ts_list_difff)
 df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
 
-# Define initial parameters
+# initial parameters
 window_size = 25  # Rolling window size
 lag_order = 1  # Set lag order as 1
 steps_ahead = 1  # Predicting one step ahead
 
-# Lists to store predictions and actual values
 predictions = []
 actual_values = []
 prediction_years = []
 
 # Rolling window validation
 for i in range(window_size, len(df) - steps_ahead + 1):
-    # Select training data for the current window
+    #  training data for the current window
     train_data = df.iloc[i - window_size:i]
 
     # Fit VAR model
@@ -2416,11 +2326,11 @@ for i in range(window_size, len(df) - steps_ahead + 1):
     actual_values.append(df.iloc[i, 11])
     prediction_years.append(df.index[i])
 
-# Calculate MSE
+#  MSE
 mse_value = mean_squared_error(actual_values, predictions)
 print(f"MSE of the forecasts is: {mse_value}")
 
-# Calculate RMSE
+#  RMSE
 rmse_value = np.sqrt(mse_value)
 print(f"RMSE of the forecasts is: {rmse_value}")
 
@@ -2441,13 +2351,12 @@ for year in future_years:
     predictions.append(forecast[0][11])
     prediction_years.append(year)
 
-# Print actual and predicted values
 print("Predicted values:")
 print(predictions)
 print("Actual values:")
 print(actual_values)
 
-# Plotting the results
+# Plot
 plt.figure(figsize=(10, 6))
 plt.plot(prediction_years, predictions, label='Predicted Diff Remittances', linestyle='--', color='orange')
 plt.plot(df.index[-len(actual_values):], actual_values, label='Original Diff Remittances', color='blue')
@@ -2456,7 +2365,6 @@ plt.title('Comparison of VAR Model Forecast vs Original Data')
 plt.xlabel('Year')
 plt.ylabel('Value')
 
-# Ensure x-axis only shows years
 plt.xticks(ticks=prediction_years, labels=prediction_years, rotation=0)
 
 plt.legend()
@@ -2466,6 +2374,7 @@ plt.show()
 
 ```
 
+printing the values will be converted to the original scale:
 ```{python}
 import pandas as pd
 import numpy as np
@@ -2473,26 +2382,24 @@ from statsmodels.tsa.api import VAR
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-# Assuming df is your DataFrame and it is already loaded
 df = pd.DataFrame(ts_list_difff)
-df.index = pd.to_datetime(df.index).year  # Convert index to only include the year
+df.index = pd.to_datetime(df.index).year  
 
-# Define initial parameters
+# initial parameters
 window_size = 25  # Rolling window size
 lag_order = 1  # Set lag order as 1
 steps_ahead = 1  # Predicting one step ahead
 
-# Lists to store predictions and actual values
-predictions_to_convert = df.iloc[:window_size, 11].tolist()  # Include initial values from the original data
+predictions_to_convert = df.iloc[:window_size, 11].tolist()  
 actual_values = []
 prediction_years = df.index[:window_size].tolist()
 
 # Rolling window validation
 for i in range(window_size, len(df) - steps_ahead + 1):
-    # Select training data for the current window
+    #  training data for the current window
     train_data = df.iloc[i - window_size:i]
 
-    # Fit VAR model
+    #  VAR model
     model = VAR(train_data)
     var_model = model.fit(lag_order)
 
@@ -2541,23 +2448,21 @@ predictions_converted_full = [initial_value_1990, initial_value_1990 + initial_v
 for value in predictions_to_convert:
     predictions_converted_full.append(predictions_converted_full[-1] + value)
 
-# Print the converted values
+
 print("Predictions converted to original scale:")
 print(predictions_converted_full)
 
-# Create a date range starting from 1990 to match the original series
+# date range starting from 1990 to match the original series
 start_year = 1990
 years = pd.date_range(start=f'{start_year}', periods=len(predictions_converted_full), freq='Y')
 
-# Create a DataFrame for plotting
 df_predictions = pd.DataFrame({'Year': years, 'Predicted Remittances': predictions_converted_full})
 df_predictions.set_index('Year', inplace=True)
 
-# Create a DataFrame for the original series with the same years
 df_original = pd.DataFrame({'Year': years[:len(ts_remittences)], 'Original Remittances': ts_remittences})
 df_original.set_index('Year', inplace=True)
 
-# Plot the results
+# Plot
 plt.figure(figsize=(10, 6))
 plt.plot(df_original.index, df_original['Original Remittances'], linestyle='-', color='blue', label='Original Remittances')
 plt.plot(df_predictions.index, df_predictions['Predicted Remittances'], linestyle='--', color='orange', label='Predicted Remittances')
@@ -2568,7 +2473,6 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# Print the converted values with their corresponding years
 print("Predictions converted to original scale with years:")
 print(df_predictions)
 
@@ -2599,124 +2503,9 @@ print(f'RMSE: {rmse}')
 
 
 
-## 4. NNVAR
+## 4. MACHINE LEARNING FORECAST
 
-
-
-```{python}
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM
-from tensorflow.keras.layers import Dense, Dropout
-import pandas as pd
-from matplotlib import pyplot as plt
-from sklearn.preprocessing import StandardScaler
-import seaborn as sns
-#from datetime import datetime
-
-df=pd.DataFrame(ts_list)
-
-train_dates = df.index
-print(train_dates[-15:])  # Check last few dates
-
-# Variables for training
-cols = df.columns
-print(cols) # Print columns to verify
-
-df_for_training = df.astype(float)
-
-# Normalize the dataset
-scaler = StandardScaler()
-scaler = scaler.fit(df_for_training)
-df_for_training_scaled = scaler.transform(df_for_training)
-
-
-#df_for_training_scaled = pd.DataFrame(df_for_training_scaled, columns=df_for_training.columns, index=df.index)
-#print(df_for_training_scaled.head()) 
-
-n_past = 14   # Number of past days we want to use to predict the future
-n_predict = 1  # Number of future days we want to predict
-
-trainX = []
-trainY = []
-
-#Reformat input data into a shape: (n_samples x timesteps x n_features)
-#In my example, my df_for_training_scaled has a shape (12823, 5)
-#12823 refers to the number of data points and 5 refers to the columns (multi-variables).
-for i in range(n_past, len(df_for_training_scaled) - n_future +1):
-    trainX.append(df_for_training_scaled[i - n_past:i, 0:df_for_training.shape[1]])
-    trainY.append(df_for_training_scaled[i + n_future - 1:i + n_future, 0])
-
-
-trainX, trainY = np.array(trainX), np.array(trainY)
-
-print('trainX shape == {}.'.format(trainX.shape))
-print('trainY shape == {}.'.format(trainY.shape))
-
-
-# Define the LSTM model
-model = Sequential()
-model.add(LSTM(64, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))
-model.add(LSTM(32, activation='relu', return_sequences=False))
-model.add(Dropout(0.2))
-model.add(Dense(1))
-
-model.compile(optimizer='adam', loss='mse')
-model.summary()
-
-# Fit the model
-history = model.fit(trainX, trainY, epochs=50, batch_size=16, validation_split=0.1, verbose=1)
-
-print(history.history.keys())
-
-# Print the loss values for each epoch
-print("Training loss values: ", history.history['loss'])
-print("Validation loss values: ", history.history['val_loss'])
-
-# Plot the training and validation loss values
-plt.figure(figsize=(12, 6))
-plt.plot(history.history['loss'], label='Training loss')
-plt.plot(history.history['val_loss'], label='Validation loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.title('Training and Validation Loss')
-plt.legend()
-plt.show()
-
-
-
-n_future = 7  # Number of years we want to predict into the future
-# Adjust to start forecasting from the year after the last available year
-datelist_future = pd.date_range(datelist_train[-1], periods=n_future+1, freq='Y').tolist()[1:]
-datelist_train = df.index
-
-# Convert Pandas Timestamp to Datetime object (for transformation) --> FUTURE
-datelist_future_ = [this_timestamp.date() for this_timestamp in datelist_future]
-
-# Make predictions for future dates
-predictions_future = model.predict(trainX[-1:])
-
-
-prediction_copies = np.repeat(predictions_future, df_for_training.shape[1], axis=-1)
-y_pred_future = scaler.inverse_transform(prediction_copies)[:,-1]
-datelist_train = df.index
-
-# Create DataFrame for future predictions
-PREDICTIONS_FUTURE = pd.DataFrame(y_pred_future, columns=['Predicted Remittences']).set_index(pd.Series(datelist_future_))
-
-# Plotting
-plt.figure(figsize=(14, 8))
-sns.lineplot(data=df, x=df.index, y='remittence', label='Original Remittences')
-sns.lineplot(data=PREDICTIONS_FUTURE, x=PREDICTIONS_FUTURE.index, y='Predicted Remittences', label='Predicted Remittences')
-plt.axvline(x=df.index[-1], color='blue', linestyle='--')
-plt.legend()
-plt.show()
-
-```
-
-
-
-
+LSTM
 
 
 ```{python}
@@ -2729,6 +2518,17 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
+
+df=pd.DataFrame(ts_list)
+
+train_dates = df.index
+print(train_dates[-15:])  # Check last few dates
+
+# Variables for training
+cols = df.columns
+print(cols) # Print columns to verify
+
+df_for_training = df.astype(float)
 
 # Set the seed for reproducibility
 def set_seed(seed):
@@ -2793,10 +2593,9 @@ for _ in range(5):
 future_predictions = np.array(future_predictions)
 future_predictions_inversed = scaler.inverse_transform(future_predictions)
 
-# Extract the "remittence" column from future predictions
+# "remittence" column from future predictions
 future_remittence = future_predictions_inversed[:, df.columns.get_loc('remittence')]
 
-# Create extended remittence array
 extended_remittence = np.concatenate((remittence, future_remittence))
 
 data = np.array(extended_remittence)
@@ -2804,7 +2603,7 @@ data = np.array(extended_remittence)
 # Years from 1990
 years = np.arange(1990, 1990 + len(data))
 
-# Plotting the data
+# Plot
 plt.figure(figsize=(12, 6))
 plt.plot(years, data, label=' Original Remittances', color='blue')
 plt.plot(years[-5:], data[-5:], label='Predicted Remittances ', color='orange')
